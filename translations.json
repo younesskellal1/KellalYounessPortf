@@ -1,0 +1,164 @@
+{
+  "en": {
+    "nav": {
+      "home": "Home",
+      "projects": "Projects",
+      "skills": "Skills",
+      "education": "Education",
+      "certifications": "Certifications",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "hero": {
+      "download_cv": "Download CV",
+      "get_in_touch": "Get In Touch"
+    },
+    "sections": {
+      "skills": "Skills",
+      "featured_projects": "Featured Projects",
+      "education": "Education",
+      "view_all": "View All",
+      "view_all_skills": "View All Skills",
+      "view_all_projects": "View All Projects"
+    },
+    "pages": {
+      "my_projects": "My Projects",
+      "projects_subtitle": "A collection of my work and contributions",
+      "skills_title": "Skills & Technologies",
+      "skills_subtitle": "A comprehensive overview of my technical expertise",
+      "education_title": "Education",
+      "education_subtitle": "Academic journey and achievements",
+      "certifications_title": "Certifications",
+      "certifications_subtitle": "Professional certifications and achievements",
+      "about_title": "About Me",
+      "about_subtitle": "Get to know more about my journey",
+      "contact_title": "Get In Touch",
+      "contact_subtitle": "Let's work together on your next project"
+    },
+    "common": {
+      "name": "Name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "send": "Send",
+      "send_message": "Send Message",
+      "contact_info": "Contact Information",
+      "phone": "Phone",
+      "location": "Location",
+      "total_skills": "Total Skills",
+      "categories": "Categories",
+      "average_proficiency": "Average Proficiency",
+      "all_skills": "All Skills",
+      "no_data": "No data available",
+      "loading": "Loading..."
+    }
+  },
+  "fr": {
+    "nav": {
+      "home": "Accueil",
+      "projects": "Projets",
+      "skills": "Compétences",
+      "education": "Éducation",
+      "certifications": "Certifications",
+      "about": "À propos",
+      "contact": "Contact"
+    },
+    "hero": {
+      "download_cv": "Télécharger CV",
+      "get_in_touch": "Contactez-moi"
+    },
+    "sections": {
+      "skills": "Compétences",
+      "featured_projects": "Projets en vedette",
+      "education": "Éducation",
+      "view_all": "Voir tout",
+      "view_all_skills": "Voir toutes les compétences",
+      "view_all_projects": "Voir tous les projets"
+    },
+    "pages": {
+      "my_projects": "Mes Projets",
+      "projects_subtitle": "Une collection de mes travaux et contributions",
+      "skills_title": "Compétences et Technologies",
+      "skills_subtitle": "Un aperçu complet de mon expertise technique",
+      "education_title": "Éducation",
+      "education_subtitle": "Parcours académique et réalisations",
+      "certifications_title": "Certifications",
+      "certifications_subtitle": "Certifications professionnelles et réalisations",
+      "about_title": "À propos de moi",
+      "about_subtitle": "En savoir plus sur mon parcours",
+      "contact_title": "Contactez-moi",
+      "contact_subtitle": "Travaillons ensemble sur votre prochain projet"
+    },
+    "common": {
+      "name": "Nom",
+      "email": "E-mail",
+      "subject": "Sujet",
+      "message": "Message",
+      "send": "Envoyer",
+      "send_message": "Envoyer le message",
+      "contact_info": "Informations de contact",
+      "phone": "Téléphone",
+      "location": "Localisation",
+      "total_skills": "Total des compétences",
+      "categories": "Catégories",
+      "average_proficiency": "Compétence moyenne",
+      "all_skills": "Toutes les compétences",
+      "no_data": "Aucune donnée disponible",
+      "loading": "Chargement..."
+    }
+  },
+  "ar": {
+    "nav": {
+      "home": "الرئيسية",
+      "projects": "المشاريع",
+      "skills": "المهارات",
+      "education": "التعليم",
+      "certifications": "الشهادات",
+      "about": "نبذة",
+      "contact": "اتصل"
+    },
+    "hero": {
+      "download_cv": "تحميل السيرة الذاتية",
+      "get_in_touch": "تواصل معي"
+    },
+    "sections": {
+      "skills": "المهارات",
+      "featured_projects": "المشاريع المميزة",
+      "education": "التعليم",
+      "view_all": "عرض الكل",
+      "view_all_skills": "عرض جميع المهارات",
+      "view_all_projects": "عرض جميع المشاريع"
+    },
+    "pages": {
+      "my_projects": "مشاريعي",
+      "projects_subtitle": "مجموعة من أعمالي ومساهماتي",
+      "skills_title": "المهارات والتقنيات",
+      "skills_subtitle": "نظرة شاملة على خبرتي التقنية",
+      "education_title": "التعليم",
+      "education_subtitle": "الرحلة الأكاديمية والإنجازات",
+      "certifications_title": "الشهادات",
+      "certifications_subtitle": "الشهادات المهنية والإنجازات",
+      "about_title": "نبذة عني",
+      "about_subtitle": "تعرف على المزيد حول رحلتي",
+      "contact_title": "تواصل معي",
+      "contact_subtitle": "دعنا نعمل معًا على مشروعك القادم"
+    },
+    "common": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "subject": "الموضوع",
+      "message": "الرسالة",
+      "send": "إرسال",
+      "send_message": "إرسال الرسالة",
+      "contact_info": "معلومات الاتصال",
+      "phone": "الهاتف",
+      "location": "الموقع",
+      "total_skills": "إجمالي المهارات",
+      "categories": "الفئات",
+      "average_proficiency": "الكفاءة المتوسطة",
+      "all_skills": "جميع المهارات",
+      "no_data": "لا توجد بيانات متاحة",
+      "loading": "جاري التحميل..."
+    }
+  }
+}

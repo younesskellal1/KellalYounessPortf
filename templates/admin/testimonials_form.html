@@ -1,0 +1,57 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ 'Edit' if entry else 'Add' }} Testimonial{% endblock %}
+
+{% block content %}
+<form method="POST" class="admin-form">
+    <div class="form-section">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="name">Name *</label>
+                <input type="text" id="name" name="name" value="{{ entry.name if entry else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="role">Role/Position *</label>
+                <input type="text" id="role" name="role" value="{{ entry.role if entry else '' }}" required placeholder="Senior Developer">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" value="{{ entry.company if entry else '' }}" placeholder="Company Name">
+        </div>
+        <div class="form-group">
+            <label for="content">Testimonial Content *</label>
+            <textarea id="content" name="content" rows="6" required placeholder="What they said about you...">{{ entry.content if entry else '' }}</textarea>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="rating">Rating (1-5)</label>
+                <input type="number" id="rating" name="rating" value="{{ entry.rating if entry else 5 }}" min="1" max="5" required>
+            </div>
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" value="{{ entry.date if entry and entry.date else '' }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="image_url">Profile Image URL</label>
+            <input type="url" id="image_url" name="image_url" value="{{ entry.image_url if entry else '' }}" placeholder="https://example.com/photo.jpg">
+        </div>
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="featured" {% if entry and entry.featured %}checked{% endif %}>
+                <span>Featured (show on homepage)</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>{{ 'Update' if entry else 'Create' }} Testimonial</span>
+            <i class="fas fa-save"></i>
+        </button>
+        <a href="{{ url_for('admin_testimonials') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

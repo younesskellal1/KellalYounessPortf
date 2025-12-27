@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Flask
+instance/
+.webassets-cache
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (keep directory structure but ignore files)
+static/uploads/cv/*
+!static/uploads/cv/.gitkeep
+
+# JSON backups (optional - uncomment if you don't want to track backups)
+# *.backup.json
+# portfolio_backup.json
+
+# Logs
+*.log
+
+# Firebase service account keys (do NOT commit these)
+# Ignore common firebase admin key filename patterns
+kellal-youness-firebase-adminsdk-*.json
+*firebase-adminsdk-*.json
+# If Firebase integration is removed, keeping these ignore patterns is harmless.
+

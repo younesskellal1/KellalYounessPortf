@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Edit {{ language_name }} Translations{% endblock %}
+
+{% block content %}
+<div class="translations-edit-header">
+    <a href="{{ url_for('admin_translations') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i>
+        Back to Translations
+    </a>
+    <h2>Edit {{ language_name }} ({{ language|upper }}) Translations</h2>
+</div>
+
+<form method="POST" action="{{ url_for('admin_translations_update', language=language) }}" class="translations-form">
+    {% for section, items in translations.items() %}
+    <div class="translation-section">
+        <h3 class="section-title-translation">{{ section|upper }}</h3>
+        <div class="translations-grid">
+            {% for key, value in items.items() %}
+            <div class="translation-item">
+                <label for="translation_{{ section }}_{{ key }}">
+                    <span class="translation-key">{{ section }}.{{ key }}</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="translation_{{ section }}_{{ key }}" 
+                    name="translation_{{ section }}_{{ key }}" 
+                    value="{{ value }}"
+                    class="translation-input"
+                >
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>Save All Translations</span>
+            <i class="fas fa-save"></i>
+        </button>
+        <a href="{{ url_for('admin_translations') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

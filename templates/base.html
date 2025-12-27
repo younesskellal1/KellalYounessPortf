@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{% if current_language == 'ar' %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Portfolio{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar glassmorphic-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="{{ url_for('index') }}">
+                    <span class="logo-text">{% if data and data.personal_info.name %}{{ data.personal_info.name }}{% else %}Portfolio{% endif %}</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('index') }}" class="nav-link">{{ t('nav.home') }}</a></li>
+                <li><a href="{{ url_for('projects') }}" class="nav-link">{{ t('nav.projects') }}</a></li>
+                <li><a href="{{ url_for('skills') }}" class="nav-link">{{ t('nav.skills') }}</a></li>
+                <li><a href="{{ url_for('education') }}" class="nav-link">{{ t('nav.education') }}</a></li>
+                <li><a href="{{ url_for('certifications') }}" class="nav-link">{{ t('nav.certifications') }}</a></li>
+                <li><a href="{{ url_for('blog') }}" class="nav-link">Blog</a></li>
+                <li><a href="{{ url_for('contact') }}" class="nav-link">{{ t('nav.contact') }}</a></li>
+            </ul>
+            <div class="language-switcher">
+                <button class="lang-btn" id="langToggle" aria-label="Language">
+                    <i class="fas fa-globe"></i>
+                    <span class="lang-code">{{ current_language|upper }}</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    {% for code, name in supported_languages.items() %}
+                    <a href="{{ url_for('set_language_route', language=code) }}" 
+                       class="lang-option {% if code == current_language %}active{% endif %}">
+                        <span class="lang-name">{{ name }}</span>
+                        {% if code == current_language %}
+                        <i class="fas fa-check"></i>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="flash-close">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>Connect</h3>
+                        <div class="social-links">
+                            {% if data and data.personal_info.social_links.github %}
+                            <a href="{{ data.personal_info.social_links.github }}" target="_blank" class="social-link">
+                                <i class="fab fa-github"></i>
+                            </a>
+                            {% endif %}
+                            {% if data and data.personal_info.social_links.linkedin %}
+                            <a href="{{ data.personal_info.social_links.linkedin }}" target="_blank" class="social-link">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                            {% endif %}
+                            {% if data and data.personal_info.social_links.twitter %}
+                            <a href="{{ data.personal_info.social_links.twitter }}" target="_blank" class="social-link">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="footer-section">
+                        <p>&copy; 2024 {% if data and data.personal_info.name %}{{ data.personal_info.name }}{% else %}Portfolio{% endif %}. All rights reserved.</p>
+                    </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- AI Chat Assistant -->
+    <div id="chatWidget" class="chat-widget">
+        <!-- Chat Button -->
+        <button id="chatButton" class="chat-button" aria-label="Open chat">
+            <i class="fas fa-robot"></i>
+            <span class="chat-notification"></span>
+        </button>
+        
+        <!-- Chat Box -->
+        <div id="chatBox" class="chat-box">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <div class="chat-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="chat-header-text">
+                        <h3>AI Assistant</h3>
+                        <p>Ask me anything about {{ data.personal_info.name if data and data.personal_info.name else 'the portfolio' }}</p>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button id="chatMinimize" class="chat-icon-btn" aria-label="Minimize">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button id="chatClose" class="chat-icon-btn" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="chatMessages" class="chat-messages">
+                <div class="chat-message chat-message-assistant">
+                    <div class="chat-bubble chat-bubble-assistant">
+                        <p>Hello! I'm your AI assistant. I can help you learn about {{ data.personal_info.name if data and data.personal_info.name else 'this portfolio' }}, their skills, projects, education, and more. What would you like to know?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="chatTyping" class="chat-typing-indicator" style="display: none;">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input 
+                    type="text" 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="Type your message..."
+                    autocomplete="off"
+                >
+                <button id="chatSend" class="chat-send-btn" aria-label="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat-assistant.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

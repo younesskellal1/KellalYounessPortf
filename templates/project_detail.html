@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.title }} - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<!-- Project Header -->
+<section class="project-detail-header">
+    <div class="container">
+        <a href="{{ url_for('projects') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Projects</span>
+        </a>
+        <div class="project-header-content">
+            <div class="project-header-text">
+                <h1 class="project-detail-title">{{ project.title }}</h1>
+                {% if project.featured %}
+                <span class="project-featured-badge">
+                    <i class="fas fa-star"></i>
+                    Featured Project
+                </span>
+                {% endif %}
+            </div>
+            <div class="project-header-actions">
+                {% if project.github_url %}
+                <a href="{{ project.github_url }}" target="_blank" class="btn btn-secondary">
+                    <i class="fab fa-github"></i>
+                    <span>View Code</span>
+                </a>
+                {% endif %}
+                {% if project.live_url %}
+                <a href="{{ project.live_url }}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>Live Demo</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Project Timeline -->
+{% if project.start_date or project.end_date %}
+<section class="project-timeline-section">
+    <div class="container">
+        <div class="project-timeline">
+            {% if project.start_date %}
+            <div class="timeline-item-small">
+                <i class="fas fa-calendar-alt"></i>
+                <div>
+                    <span class="timeline-label">Start Date</span>
+                    <span class="timeline-value">{{ project.start_date }}</span>
+                </div>
+            </div>
+            {% endif %}
+            {% if project.end_date %}
+            <div class="timeline-item-small">
+                <i class="fas fa-calendar-check"></i>
+                <div>
+                    <span class="timeline-label">End Date</span>
+                    <span class="timeline-value">{{ project.end_date }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Project Main Content -->
+<section class="project-detail-content">
+    <div class="container">
+        <div class="project-detail-grid">
+            <!-- Main Content -->
+            <div class="project-main">
+                <!-- Description -->
+                <div class="project-section">
+                    <h2 class="section-title-small">
+                        <i class="fas fa-info-circle"></i>
+                        About This Project
+                    </h2>
+                    <div class="project-description-full">
+                        <p>{{ project.description }}</p>
+                    </div>
+                </div>
+
+                <!-- Screenshots Gallery -->
+                {% if project.screenshots and project.screenshots|length > 0 %}
+                <div class="project-section">
+                    <h2 class="section-title-small">
+                        <i class="fas fa-images"></i>
+                        Screenshots
+                    </h2>
+                    <div class="screenshots-gallery">
+                        {% for screenshot in project.screenshots %}
+                        <div class="screenshot-item" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                            <div class="screenshot-wrapper">
+                                <img src="{{ url_for('static', filename='uploads/project_screenshots/' + screenshot.filename) }}" 
+                                     alt="{{ screenshot.caption if screenshot.caption else project.title + ' screenshot' }}"
+                                     class="screenshot-image">
+                                <div class="screenshot-overlay">
+                                    <button class="screenshot-view-btn" data-screenshot="{{ loop.index0 }}">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% if screenshot.caption %}
+                            <p class="screenshot-caption">{{ screenshot.caption }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="project-sidebar">
+                <!-- Technologies -->
+                <div class="project-info-card">
+                    <h3 class="info-card-title">
+                        <i class="fas fa-code"></i>
+                        Technologies
+                    </h3>
+                    <div class="technologies-list">
+                        {% for tech in project.technologies %}
+                        <span class="tech-badge-large">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Project Links -->
+                <div class="project-info-card">
+                    <h3 class="info-card-title">
+                        <i class="fas fa-link"></i>
+                        Links
+                    </h3>
+                    <div class="project-links-list">
+                        {% if project.github_url %}
+                        <a href="{{ project.github_url }}" target="_blank" class="project-link-item">
+                            <i class="fab fa-github"></i>
+                            <span>GitHub Repository</span>
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        {% endif %}
+                        {% if project.live_url %}
+                        <a href="{{ project.live_url }}" target="_blank" class="project-link-item">
+                            <i class="fas fa-globe"></i>
+                            <span>Live Demo</span>
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Project Stats -->
+                <div class="project-info-card">
+                    <h3 class="info-card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Project Info
+                    </h3>
+                    <div class="project-stats">
+                        {% if project.start_date %}
+                        <div class="stat-item">
+                            <span class="stat-label">Started</span>
+                            <span class="stat-value">{{ project.start_date }}</span>
+                        </div>
+                        {% endif %}
+                        {% if project.end_date %}
+                        <div class="stat-item">
+                            <span class="stat-label">Completed</span>
+                            <span class="stat-value">{{ project.end_date }}</span>
+                        </div>
+                        {% endif %}
+                        {% if project.technologies %}
+                        <div class="stat-item">
+                            <span class="stat-label">Technologies</span>
+                            <span class="stat-value">{{ project.technologies|length }}</span>
+                        </div>
+                        {% endif %}
+                        {% if project.screenshots %}
+                        <div class="stat-item">
+                            <span class="stat-label">Screenshots</span>
+                            <span class="stat-value">{{ project.screenshots|length }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Screenshot Lightbox Modal -->
+<div id="screenshotModal" class="screenshot-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <button class="modal-close" id="modalClose">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="modal-nav modal-prev" id="modalPrev">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="modal-nav modal-next" id="modalNext">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="modal-image-container">
+            <img id="modalImage" src="" alt="Screenshot">
+        </div>
+        <div class="modal-caption" id="modalCaption"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Screenshot lightbox
+    const modal = document.getElementById('screenshotModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalCaption = document.getElementById('modalCaption');
+    const modalClose = document.getElementById('modalClose');
+    const modalPrev = document.getElementById('modalPrev');
+    const modalNext = document.getElementById('modalNext');
+    
+    const screenshots = [
+        {% if project.screenshots %}
+        {% for screenshot in project.screenshots %}
+        {
+            src: "{{ url_for('static', filename='uploads/project_screenshots/' + screenshot.filename) }}",
+            caption: "{{ screenshot.caption if screenshot.caption else '' }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+        {% endif %}
+    ];
+    
+    let currentScreenshotIndex = 0;
+    
+    // Open modal
+    document.querySelectorAll('.screenshot-view-btn').forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            currentScreenshotIndex = index;
+            showScreenshot(index);
+            modal.classList.add('modal-open');
+        });
+    });
+    
+    // Close modal
+    modalClose.addEventListener('click', () => {
+        modal.classList.remove('modal-open');
+    });
+    
+    modal.querySelector('.modal-overlay').addEventListener('click', () => {
+        modal.classList.remove('modal-open');
+    });
+    
+    // Navigation
+    modalPrev.addEventListener('click', () => {
+        currentScreenshotIndex = (currentScreenshotIndex - 1 + screenshots.length) % screenshots.length;
+        showScreenshot(currentScreenshotIndex);
+    });
+    
+    modalNext.addEventListener('click', () => {
+        currentScreenshotIndex = (currentScreenshotIndex + 1) % screenshots.length;
+        showScreenshot(currentScreenshotIndex);
+    });
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (modal.classList.contains('modal-open')) {
+            if (e.key === 'Escape') {
+                modal.classList.remove('modal-open');
+            } else if (e.key === 'ArrowLeft') {
+                modalPrev.click();
+            } else if (e.key === 'ArrowRight') {
+                modalNext.click();
+            }
+        }
+    });
+    
+    function showScreenshot(index) {
+        if (screenshots[index]) {
+            modalImage.src = screenshots[index].src;
+            modalCaption.textContent = screenshots[index].caption || '';
+        }
+    }
+    
+    // Animate sections on scroll
+    gsap.utils.toArray('.project-section, .project-info-card').forEach((element, index) => {
+        gsap.from(element, {
+            scrollTrigger: {
+                trigger: element,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.8,
+            y: 30,
+            opacity: 0,
+            delay: index * 0.1,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}
+

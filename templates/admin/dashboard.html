@@ -1,0 +1,141 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-project-diagram"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ data.projects|length if data.projects else 0 }}</h3>
+            <p>Projects</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-code"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ data.skills|length if data.skills else 0 }}</h3>
+            <p>Skills</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ data.academic|length if data.academic else 0 }}</h3>
+            <p>Academic Entries</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-certificate"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ data.certifications|length if data.certifications else 0 }}</h3>
+            <p>Certifications</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ data.messages|length if data.messages else 0 }}</h3>
+            <p>Messages</p>
+            {% if data.messages %}
+                {% set unread_count = data.messages|selectattr('read', 'equalto', false)|list|length %}
+                {% if unread_count > 0 %}
+                <small style="color: var(--color-accent);">({{ unread_count }} unread)</small>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% if analytics_summary %}
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ analytics_summary.total_views }}</h3>
+            <p>Total Page Views</p>
+            <small style="color: var(--color-accent);">{{ analytics_summary.unique_visitors }} unique visitors</small>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="dashboard-actions">
+    {% if analytics_summary %}
+    <a href="{{ url_for('admin_analytics') }}" class="btn btn-primary">
+        <i class="fas fa-chart-line"></i>
+        View Analytics Dashboard
+    </a>
+    {% endif %}
+    <div class="action-card">
+        <h3>Data Management</h3>
+        <div class="action-buttons">
+            <form method="POST" action="{{ url_for('admin_export') }}" style="display: inline;">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Export Data
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_import') }}" enctype="multipart/form-data" id="importForm" style="display: inline;">
+                <input type="file" name="import_file" accept=".json" id="importFile" style="display: none;" required>
+                <label for="importFile" class="btn btn-secondary">
+                    <i class="fas fa-upload"></i>
+                    Import Data
+                </label>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="quick-links">
+    <h3>Quick Actions</h3>
+    <div class="links-grid">
+        <a href="{{ url_for('admin_personal_info') }}" class="quick-link-card">
+            <i class="fas fa-user"></i>
+            <span>Edit Personal Info</span>
+        </a>
+        <a href="{{ url_for('admin_projects_add') }}" class="quick-link-card">
+            <i class="fas fa-plus"></i>
+            <span>Add New Project</span>
+        </a>
+        <a href="{{ url_for('admin_skills_add') }}" class="quick-link-card">
+            <i class="fas fa-plus"></i>
+            <span>Add New Skill</span>
+        </a>
+        <a href="{{ url_for('admin_cv') }}" class="quick-link-card">
+            <i class="fas fa-file-pdf"></i>
+            <span>Manage CV</span>
+        </a>
+        <a href="{{ url_for('admin_messages') }}" class="quick-link-card">
+            <i class="fas fa-envelope"></i>
+            <span>View Messages</span>
+            {% if data.messages %}
+                {% set unread_count = data.messages|selectattr('read', 'equalto', false)|list|length %}
+                {% if unread_count > 0 %}
+                <span class="badge-count">{{ unread_count }}</span>
+                {% endif %}
+            {% endif %}
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('importFile').addEventListener('change', function() {
+        if (this.files.length > 0) {
+            document.getElementById('importForm').submit();
+        }
+    });
+</script>
+{% endblock %}
+

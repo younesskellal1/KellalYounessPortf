@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Education - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">{{ t('pages.education_title') }}</h1>
+        <p class="page-subtitle">{{ t('pages.education_subtitle') }}</p>
+    </div>
+</section>
+
+{% if data.academic %}
+<section class="academic-section">
+    <div class="container">
+        <div class="academic-timeline">
+            {% for edu in data.academic %}
+            <div class="timeline-item" data-aos="fade-right" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="timeline-marker">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <h3 class="timeline-title">{{ edu.degree }}</h3>
+                        <span class="timeline-year">{{ edu.year }}</span>
+                    </div>
+                    <p class="timeline-institution">
+                        <i class="fas fa-university"></i>
+                        {{ edu.institution }}
+                    </p>
+                    {% if edu.description %}
+                    <div class="timeline-description-wrapper">
+                        <p class="timeline-description">{{ edu.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Education Summary -->
+<section class="education-summary-section">
+    <div class="container">
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="summary-content">
+                    <h3>{{ data.academic|length }}</h3>
+                    <p>Degrees & Certifications</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="summary-content">
+                    <h3>{% if data.academic and data.academic|length > 0 %}{{ data.academic[0].year }}{% else %}N/A{% endif %}</h3>
+                    <p>Earliest Entry</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <div class="summary-content">
+                    <h3>Ongoing</h3>
+                    <p>Continuous Learning</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="academic-section">
+    <div class="container">
+        <div class="empty-state">
+            <i class="fas fa-graduation-cap"></i>
+            <h3>No academic entries yet</h3>
+            <p>Academic history will appear here once added.</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Animate timeline items
+    gsap.utils.toArray('.timeline-item').forEach((element, index) => {
+        gsap.from(element, {
+            scrollTrigger: {
+                trigger: element,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.8,
+            x: -50,
+            opacity: 0,
+            delay: index * 0.15,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}
+

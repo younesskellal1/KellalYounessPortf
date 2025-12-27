@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-body">
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <h2>Admin Panel</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('admin_personal_info') }}" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>Personal Info</span>
+            </a>
+            <a href="{{ url_for('admin_projects') }}" class="nav-item">
+                <i class="fas fa-project-diagram"></i>
+                <span>Projects</span>
+            </a>
+            <a href="{{ url_for('admin_academic') }}" class="nav-item">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Academic</span>
+            </a>
+            <a href="{{ url_for('admin_skills') }}" class="nav-item">
+                <i class="fas fa-code"></i>
+                <span>Skills</span>
+            </a>
+            <a href="{{ url_for('admin_certifications') }}" class="nav-item">
+                <i class="fas fa-certificate"></i>
+                <span>Certifications</span>
+            </a>
+            <a href="{{ url_for('admin_cv') }}" class="nav-item">
+                <i class="fas fa-file-pdf"></i>
+                <span>CV Management</span>
+            </a>
+            <a href="{{ url_for('admin_messages') }}" class="nav-item">
+                <i class="fas fa-envelope"></i>
+                <span>Messages</span>
+                {% if data and data.messages %}
+                    {% set unread_count = data.messages|selectattr('read', 'equalto', false)|list|length %}
+                    {% if unread_count > 0 %}
+                    <span class="badge-count">{{ unread_count }}</span>
+                    {% endif %}
+                {% endif %}
+            </a>
+            <a href="{{ url_for('admin_translations') }}" class="nav-item">
+                <i class="fas fa-language"></i>
+                <span>Translations</span>
+            </a>
+            <a href="{{ url_for('admin_analytics') }}" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Analytics</span>
+            </a>
+            <a href="{{ url_for('admin_articles') }}" class="nav-item">
+                <i class="fas fa-newspaper"></i>
+                <span>Articles</span>
+            </a>
+            <a href="{{ url_for('admin_testimonials') }}" class="nav-item">
+                <i class="fas fa-quote-left"></i>
+                <span>Testimonials</span>
+            </a>
+            <a href="{{ url_for('index') }}" class="nav-item" target="_blank">
+                <i class="fas fa-external-link-alt"></i>
+                <span>View Site</span>
+            </a>
+            <a href="{{ url_for('admin_logout') }}" class="nav-item nav-logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Admin Main Content -->
+    <main class="admin-main">
+        <!-- Admin Header -->
+        <header class="admin-header">
+            <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            <span>{{ message }}</span>
+                            <button class="flash-close">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        <div class="admin-content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Projects{% endblock %}
+
+{% block content %}
+<div class="admin-header-actions">
+    <a href="{{ url_for('admin_projects_add') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        Add New Project
+    </a>
+</div>
+
+{% if data.projects %}
+<div class="admin-table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Technologies</th>
+                <th>Featured</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in data.projects %}
+            <tr>
+                <td>{{ project.title }}</td>
+                <td>
+                    {% for tech in project.technologies[:3] %}
+                    <span class="tech-tag-small">{{ tech }}</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% if project.featured %}
+                    <span class="badge badge-success">Yes</span>
+                    {% else %}
+                    <span class="badge">No</span>
+                    {% endif %}
+                </td>
+                <td class="actions-cell">
+                    <a href="{{ url_for('admin_projects_edit', item_id=project.id) }}" class="btn-icon" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{{ url_for('admin_project_screenshots', item_id=project.id) }}" class="btn-icon" title="Manage Screenshots">
+                        <i class="fas fa-images"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('admin_projects_delete', item_id=project.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this project?');">
+                        <button type="submit" class="btn-icon btn-danger" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-project-diagram"></i>
+    <h3>No projects yet</h3>
+    <p>Get started by adding your first project.</p>
+    <a href="{{ url_for('admin_projects_add') }}" class="btn btn-primary">Add Project</a>
+</div>
+{% endif %}
+{% endblock %}
+

@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Academic{% endblock %}
+
+{% block content %}
+<div class="admin-header-actions">
+    <a href="{{ url_for('admin_academic_add') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        Add New Entry
+    </a>
+</div>
+
+{% if data.academic %}
+<div class="admin-table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Degree</th>
+                <th>Institution</th>
+                <th>Year</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in data.academic %}
+            <tr>
+                <td>{{ entry.degree }}</td>
+                <td>{{ entry.institution }}</td>
+                <td>{{ entry.year }}</td>
+                <td class="actions-cell">
+                    <a href="{{ url_for('admin_academic_edit', item_id=entry.id) }}" class="btn-icon" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('admin_academic_delete', item_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                        <button type="submit" class="btn-icon btn-danger" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-graduation-cap"></i>
+    <h3>No academic entries yet</h3>
+    <p>Get started by adding your first academic entry.</p>
+    <a href="{{ url_for('admin_academic_add') }}" class="btn btn-primary">Add Entry</a>
+</div>
+{% endif %}
+{% endblock %}
+

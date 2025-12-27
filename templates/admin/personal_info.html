@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Personal Information{% endblock %}
+
+{% block content %}
+<form method="POST" class="admin-form">
+    <div class="form-section">
+        <h3>Basic Information</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" value="{{ data.personal_info.name if data.personal_info.name else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="title">Professional Title</label>
+                <input type="text" id="title" name="title" value="{{ data.personal_info.title if data.personal_info.title else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ data.personal_info.email if data.personal_info.email else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" value="{{ data.personal_info.phone if data.personal_info.phone else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" name="location" value="{{ data.personal_info.location if data.personal_info.location else '' }}">
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>Bio</h3>
+        <div class="form-group">
+            <label for="bio">Biography</label>
+            <textarea id="bio" name="bio" rows="5">{{ data.personal_info.bio if data.personal_info.bio else '' }}</textarea>
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>Social Links</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="github">GitHub URL</label>
+                <input type="url" id="github" name="github" value="{{ data.personal_info.social_links.github if data.personal_info.social_links else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="linkedin">LinkedIn URL</label>
+                <input type="url" id="linkedin" name="linkedin" value="{{ data.personal_info.social_links.linkedin if data.personal_info.social_links else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="twitter">Twitter URL</label>
+                <input type="url" id="twitter" name="twitter" value="{{ data.personal_info.social_links.twitter if data.personal_info.social_links else '' }}">
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>Save Changes</span>
+            <i class="fas fa-save"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}
+

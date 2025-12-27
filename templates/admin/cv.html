@@ -1,0 +1,58 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}CV Management{% endblock %}
+
+{% block content %}
+<div class="cv-management">
+    <div class="cv-section">
+        <h3>Upload CV</h3>
+        <form method="POST" enctype="multipart/form-data" class="cv-upload-form">
+            <div class="form-group">
+                <label for="cv_file">Select CV File (PDF, DOC, DOCX)</label>
+                <input type="file" id="cv_file" name="cv_file" accept=".pdf,.doc,.docx" required>
+                <small>Maximum file size: 16MB</small>
+            </div>
+            <button type="submit" class="btn btn-primary btn-glow">
+                <span>Upload CV</span>
+                <i class="fas fa-upload"></i>
+            </button>
+        </form>
+    </div>
+    
+    {% if data.cv_file %}
+    <div class="cv-section">
+        <h3>Current CV</h3>
+        <div class="cv-info-card">
+            <div class="cv-info">
+                <i class="fas fa-file-pdf"></i>
+                <div>
+                    <h4>{{ data.cv_file }}</h4>
+                    <p>Uploaded CV file</p>
+                </div>
+            </div>
+            <div class="cv-actions">
+                <a href="{{ url_for('download_cv') }}" target="_blank" class="btn btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Download
+                </a>
+                <form method="POST" action="{{ url_for('admin_cv_delete') }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete the CV file?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="cv-section">
+        <div class="empty-state">
+            <i class="fas fa-file-pdf"></i>
+            <h3>No CV uploaded</h3>
+            <p>Upload a CV file to enable the download button on your portfolio.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

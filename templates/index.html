@@ -1,0 +1,666 @@
+{% extends "base.html" %}
+
+{% block title %}Home - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<!-- Eagle 3D Canvas -->
+<canvas id="eagle-canvas"></canvas>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    <span class="glitch" data-text="{{ data.personal_info.name if data.personal_info.name else 'Your Name' }}">
+                        {{ data.personal_info.name if data.personal_info.name else 'Your Name' }}
+                    </span>
+                </h1>
+                <h2 class="hero-subtitle">{{ data.personal_info.title if data.personal_info.title else 'Full-Stack Developer' }}</h2>
+                <p class="hero-description">{{ data.personal_info.bio if data.personal_info.bio else 'A passionate developer creating innovative solutions.' }}</p>
+                <div class="hero-buttons">
+                    <a href="{{ url_for('download_cv') }}" class="btn btn-primary btn-glow">
+                        <span>{{ t('hero.download_cv') }}</span>
+                        <i class="fas fa-download"></i>
+                    </a>
+                    <a href="{{ url_for('contact') }}" class="btn btn-secondary btn-outline">
+                        <span>{{ t('hero.get_in_touch') }}</span>
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="profile-card-3d" id="profile3D">
+                    <div class="profile-image-wrapper">
+                        <div class="profile-glow"></div>
+                        <img src="/static/images/profile.png" 
+                             alt="{{ data.personal_info.name if data.personal_info.name else 'Profile' }}" 
+                             class="profile-image"
+                             id="profileImg">
+                        <div class="profile-frame"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Skills Preview Section -->
+{% if data.skills %}
+<section class="skills-preview-section">
+    <div class="container">
+        <h2 class="section-title">{{ t('sections.skills') }}</h2>
+        <div class="skills-grid">
+            {% for skill in data.skills[:6] %}
+            <div class="skill-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="skill-icon">
+                    <i class="{{ skill.icon if skill.icon else 'fas fa-code' }}"></i>
+                </div>
+                <div class="skill-info">
+                    <h3 class="skill-name">{{ skill.name }}</h3>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar" style="width: {{ skill.level }}%">
+                            <span class="skill-progress-text">{{ skill.level }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="section-footer">
+            <a href="{{ url_for('about') }}" class="btn btn-outline">{{ t('sections.view_all_skills') }}</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Testimonials Section -->
+{% if data.testimonials %}
+<section class="testimonials-section">
+    <div class="container">
+        <h2 class="section-title">Testimonials</h2>
+        <div class="testimonials-grid">
+            {% for testimonial in data.testimonials[:3] %}
+            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="testimonial-content">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">{{ testimonial.content }}</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-info">
+                            <h4 class="testimonial-name">{{ testimonial.name }}</h4>
+                            <p class="testimonial-role">{{ testimonial.role }}{% if testimonial.company %}, {{ testimonial.company }}{% endif %}</p>
+                        </div>
+                        {% if testimonial.rating %}
+                        <div class="testimonial-rating">
+                            {% for i in range(testimonial.rating) %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Projects Section -->
+{% if data.projects %}
+<section class="projects-preview-section">
+    <div class="container">
+        <h2 class="section-title">{{ t('sections.featured_projects') }}</h2>
+        <div class="projects-grid">
+            {% for project in data.projects[:3] %}
+            <div class="project-card-3d" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 150 }}">
+                <div class="project-card-inner">
+                    <div class="project-image">
+                        {% if project.image_url %}
+                        <img src="{{ project.image_url }}" alt="{{ project.title }}">
+                        {% else %}
+                        <div class="project-placeholder">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        {% endif %}
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                {% if project.github_url %}
+                                <a href="{{ project.github_url }}" target="_blank" class="project-link">
+                                    <i class="fab fa-github"></i>
+                                </a>
+                                {% endif %}
+                                {% if project.live_url %}
+                                <a href="{{ project.live_url }}" target="_blank" class="project-link">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">{{ project.title }}</h3>
+                        <p class="project-description">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                        <div class="project-technologies">
+                            {% for tech in project.technologies[:4] %}
+                            <span class="tech-tag">{{ tech }}</span>
+                            {% endfor %}
+                            {% if project.technologies|length > 4 %}
+                            <span class="tech-tag">+{{ project.technologies|length - 4 }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="project-actions">
+                            <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="section-footer">
+            <a href="{{ url_for('projects') }}" class="btn btn-outline">{{ t('sections.view_all_projects') }}</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Academic Preview Section -->
+{% if data.academic %}
+<section class="academic-preview-section">
+    <div class="container">
+        <h2 class="section-title">{{ t('sections.education') }}</h2>
+        <div class="academic-timeline">
+            {% for edu in data.academic[:3] %}
+            <div class="timeline-item" data-aos="fade-right">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <h3 class="timeline-title">{{ edu.degree }}</h3>
+                    <p class="timeline-institution">{{ edu.institution }}</p>
+                    <span class="timeline-year">{{ edu.year }}</span>
+                    {% if edu.description %}
+                    <p class="timeline-description">{{ edu.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ==================== 3D EAGLE ANIMATION ====================
+    (function() {
+        if (typeof THREE === 'undefined') return;
+        
+        const canvas = document.getElementById('eagle-canvas');
+        if (!canvas) return;
+        
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas: canvas, 
+            alpha: true,
+            antialias: true
+        });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x000000, 0);
+        
+        // Position canvas behind content
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '0';
+        canvas.style.pointerEvents = 'none';
+        
+        // Neon green material
+        const neonGreen = new THREE.MeshStandardMaterial({
+            color: 0x00ff88,
+            emissive: 0x00ff88,
+            emissiveIntensity: 1.5,
+            metalness: 0.8,
+            roughness: 0.2,
+            wireframe: true
+        });
+        
+        // Create low-poly eagle
+        const eagleGroup = new THREE.Group();
+        
+        // Body (elongated ellipsoid)
+        const bodyGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+        bodyGeometry.scale(1, 1.5, 0.8);
+        const body = new THREE.Mesh(bodyGeometry, neonGreen);
+        eagleGroup.add(body);
+        
+        // Head
+        const headGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const head = new THREE.Mesh(headGeometry, neonGreen);
+        head.position.set(0, 0.25, 0.1);
+        eagleGroup.add(head);
+        
+        // Beak
+        const beakGeometry = new THREE.ConeGeometry(0.03, 0.08, 6);
+        const beak = new THREE.Mesh(beakGeometry, neonGreen);
+        beak.rotation.x = Math.PI / 2;
+        beak.position.set(0, 0.3, 0.15);
+        eagleGroup.add(beak);
+        
+        // Left wing
+        const leftWingGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.5);
+        leftWingGeometry.scale(1, 0.3, 1);
+        const leftWing = new THREE.Mesh(leftWingGeometry, neonGreen);
+        leftWing.position.set(-0.2, 0, 0);
+        leftWing.rotation.z = -0.3;
+        eagleGroup.add(leftWing);
+        
+        // Right wing
+        const rightWingGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.5);
+        rightWingGeometry.scale(1, 0.3, 1);
+        const rightWing = new THREE.Mesh(rightWingGeometry, neonGreen);
+        rightWing.position.set(0.2, 0, 0);
+        rightWing.rotation.z = 0.3;
+        eagleGroup.add(rightWing);
+        
+        // Tail
+        const tailGeometry = new THREE.BoxGeometry(0.15, 0.05, 0.2);
+        const tail = new THREE.Mesh(tailGeometry, neonGreen);
+        tail.position.set(0, -0.15, -0.2);
+        tail.rotation.x = 0.2;
+        eagleGroup.add(tail);
+        
+        // Scale down the eagle (make it small)
+        eagleGroup.scale.set(0.3, 0.3, 0.3);
+        
+        scene.add(eagleGroup);
+        
+        // ==================== ALIENS ====================
+        const alienColors = [
+            { color: 0xff00ff, name: 'purple' },  // Magenta
+            { color: 0x00f0ff, name: 'cyan' },   // Cyan
+            { color: 0xff0066, name: 'pink' },    // Pink
+            { color: 0xffaa00, name: 'orange' }   // Orange
+        ];
+        
+        const aliens = [];
+        
+        // Create multiple aliens
+        function createAlien(color, startPos) {
+            const alienGroup = new THREE.Group();
+            
+            // Create neon material for alien
+            const alienMaterial = new THREE.MeshStandardMaterial({
+                color: color,
+                emissive: color,
+                emissiveIntensity: 1.5,
+                metalness: 0.8,
+                roughness: 0.2,
+                wireframe: true
+            });
+            
+            // Head (larger, oval)
+            const headGeometry = new THREE.SphereGeometry(0.12, 8, 8);
+            headGeometry.scale(1, 1.3, 1);
+            const head = new THREE.Mesh(headGeometry, alienMaterial);
+            alienGroup.add(head);
+            
+            // Body (smaller sphere)
+            const bodyGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const body = new THREE.Mesh(bodyGeometry, alienMaterial);
+            body.position.set(0, -0.2, 0);
+            alienGroup.add(body);
+            
+            // Large eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.04, 6, 6);
+            const leftEye = new THREE.Mesh(eyeGeometry, alienMaterial);
+            leftEye.position.set(-0.06, 0.1, 0.12);
+            alienGroup.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, alienMaterial);
+            rightEye.position.set(0.06, 0.1, 0.12);
+            alienGroup.add(rightEye);
+            
+            // Arms (tentacles)
+            const armGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 6);
+            const leftArm = new THREE.Mesh(armGeometry, alienMaterial);
+            leftArm.position.set(-0.15, -0.15, 0);
+            leftArm.rotation.z = Math.PI / 4;
+            alienGroup.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeometry, alienMaterial);
+            rightArm.position.set(0.15, -0.15, 0);
+            rightArm.rotation.z = -Math.PI / 4;
+            alienGroup.add(rightArm);
+            
+            // Legs
+            const legGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 6);
+            const leftLeg = new THREE.Mesh(legGeometry, alienMaterial);
+            leftLeg.position.set(-0.06, -0.4, 0);
+            alienGroup.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeometry, alienMaterial);
+            rightLeg.position.set(0.06, -0.4, 0);
+            alienGroup.add(rightLeg);
+            
+            // Antenna
+            const antennaGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.2, 6);
+            const antenna = new THREE.Mesh(antennaGeometry, alienMaterial);
+            antenna.position.set(0, 0.25, 0);
+            alienGroup.add(antenna);
+            
+            const antennaTop = new THREE.SphereGeometry(0.03, 6, 6);
+            const antennaSphere = new THREE.Mesh(antennaTop, alienMaterial);
+            antennaSphere.position.set(0, 0.35, 0);
+            alienGroup.add(antennaSphere);
+            
+            // Scale down alien (make it small)
+            alienGroup.scale.set(0.25, 0.25, 0.25);
+            alienGroup.position.copy(startPos);
+            
+            scene.add(alienGroup);
+            
+            return {
+                group: alienGroup,
+                leftArm: leftArm,
+                rightArm: rightArm,
+                leftLeg: leftLeg,
+                rightLeg: rightLeg,
+                antenna: antenna,
+                antennaSphere: antennaSphere,
+                color: color,
+                targetPosition: new THREE.Vector3(
+                    (Math.random() - 0.5) * 8,
+                    (Math.random() - 0.5) * 6,
+                    (Math.random() - 0.5) * 4
+                ),
+                currentPosition: startPos.clone(),
+                currentRotation: new THREE.Euler(0, 0, 0),
+                speed: 0.015 + Math.random() * 0.01,
+                armPhase: Math.random() * Math.PI * 2,
+                legPhase: Math.random() * Math.PI * 2,
+                floatPhase: Math.random() * Math.PI * 2
+            };
+        }
+        
+        // Create 4 aliens with different colors
+        for (let i = 0; i < 4; i++) {
+            const startPos = new THREE.Vector3(
+                (Math.random() - 0.5) * 8,
+                (Math.random() - 0.5) * 6,
+                (Math.random() - 0.5) * 4
+            );
+            const alien = createAlien(alienColors[i].color, startPos);
+            aliens.push(alien);
+            
+            // Update target position periodically for each alien
+            setInterval(() => {
+                alien.targetPosition.set(
+                    (Math.random() - 0.5) * 8,
+                    (Math.random() - 0.5) * 6,
+                    (Math.random() - 0.5) * 4
+                );
+            }, 4000 + Math.random() * 2000);
+        }
+        
+        // Camera position
+        camera.position.set(0, 0, 5);
+        camera.lookAt(0, 0, 0);
+        
+        // Lighting for emissive material
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+        scene.add(ambientLight);
+        
+        // Point lights for each alien color
+        alienColors.forEach((colorData, i) => {
+            const pointLight = new THREE.PointLight(colorData.color, 0.8, 100);
+            pointLight.position.set(0, 0, 5);
+            scene.add(pointLight);
+        });
+        
+        const eagleLight = new THREE.PointLight(0x00ff88, 1, 100);
+        eagleLight.position.set(0, 0, 5);
+        scene.add(eagleLight);
+        
+        // Flight path variables
+        let targetPosition = new THREE.Vector3(
+            (Math.random() - 0.5) * 8,
+            (Math.random() - 0.5) * 6,
+            (Math.random() - 0.5) * 4
+        );
+        let currentPosition = new THREE.Vector3(0, 0, 0);
+        let targetRotation = new THREE.Euler(0, 0, 0);
+        let currentRotation = new THREE.Euler(0, 0, 0);
+        let speed = 0.02;
+        let wingFlapPhase = 0;
+        let wingFlapSpeed = 0.15;
+        
+        // Update target position periodically
+        function updateTargetPosition() {
+            targetPosition.set(
+                (Math.random() - 0.5) * 8,
+                (Math.random() - 0.5) * 6,
+                (Math.random() - 0.5) * 4
+            );
+        }
+        
+        updateTargetPosition();
+        setInterval(updateTargetPosition, 3000 + Math.random() * 2000);
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // ==================== EAGLE ANIMATION ====================
+            // Smooth interpolation to target position
+            currentPosition.lerp(targetPosition, speed);
+            eagleGroup.position.copy(currentPosition);
+            
+            // Calculate direction and banking
+            const direction = new THREE.Vector3()
+                .subVectors(targetPosition, currentPosition)
+                .normalize();
+            
+            // Calculate rotation based on direction
+            const targetYaw = Math.atan2(direction.x, direction.z);
+            const targetPitch = -Math.asin(direction.y);
+            
+            // Banking based on horizontal movement
+            const bankAngle = direction.x * 0.5; // Tilt into turns
+            
+            // Smooth rotation interpolation
+            currentRotation.y += (targetYaw - currentRotation.y) * 0.1;
+            currentRotation.x += (targetPitch - currentRotation.x) * 0.1;
+            currentRotation.z += (bankAngle - currentRotation.z) * 0.1;
+            
+            // Apply rotation
+            eagleGroup.rotation.y = currentRotation.y;
+            eagleGroup.rotation.x = currentRotation.x;
+            eagleGroup.rotation.z = currentRotation.z;
+            
+            // Wing flapping animation
+            wingFlapPhase += wingFlapSpeed;
+            const flapAmount = Math.sin(wingFlapPhase) * 0.4;
+            leftWing.rotation.z = -0.3 - flapAmount;
+            rightWing.rotation.z = 0.3 + flapAmount;
+            
+            // Update eagle light to follow eagle
+            eagleLight.position.lerp(eagleGroup.position.clone().add(new THREE.Vector3(0, 0, 2)), 0.1);
+            
+            // ==================== ALIENS ANIMATION ====================
+            aliens.forEach((alien, index) => {
+                // Smooth interpolation to target position
+                alien.currentPosition.lerp(alien.targetPosition, alien.speed);
+                alien.group.position.copy(alien.currentPosition);
+                
+                // Calculate direction
+                const alienDirection = new THREE.Vector3()
+                    .subVectors(alien.targetPosition, alien.currentPosition)
+                    .normalize();
+                
+                // Calculate rotation based on direction
+                const alienTargetYaw = Math.atan2(alienDirection.x, alienDirection.z);
+                const alienTargetPitch = -Math.asin(alienDirection.y);
+                
+                // Smooth rotation interpolation
+                alien.currentRotation.y += (alienTargetYaw - alien.currentRotation.y) * 0.08;
+                alien.currentRotation.x += (alienTargetPitch - alien.currentRotation.x) * 0.08;
+                
+                // Apply rotation
+                alien.group.rotation.y = alien.currentRotation.y;
+                alien.group.rotation.x = alien.currentRotation.x;
+                
+                // Floating/bobbing animation
+                alien.floatPhase += 0.02;
+                const floatOffset = Math.sin(alien.floatPhase) * 0.1;
+                alien.group.position.y += floatOffset * 0.01;
+                
+                // Arm swinging animation
+                alien.armPhase += 0.1;
+                const armSwing = Math.sin(alien.armPhase) * 0.3;
+                alien.leftArm.rotation.z = Math.PI / 4 + armSwing;
+                alien.rightArm.rotation.z = -Math.PI / 4 - armSwing;
+                
+                // Leg walking animation
+                alien.legPhase += 0.12;
+                const legSwing = Math.sin(alien.legPhase) * 0.2;
+                alien.leftLeg.rotation.x = legSwing;
+                alien.rightLeg.rotation.x = -legSwing;
+                
+                // Antenna pulsing
+                const antennaPulse = Math.sin(alien.floatPhase * 2) * 0.05;
+                alien.antennaSphere.scale.set(1 + antennaPulse, 1 + antennaPulse, 1 + antennaPulse);
+                
+                // Rotate antenna
+                alien.antenna.rotation.z += 0.01;
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        window.addEventListener('resize', onWindowResize);
+        
+        // Start animation
+        animate();
+    })();
+    
+    // ==================== 3D PROFILE IMAGE MOUSE TRACKING ====================
+    (function() {
+        const profileCard = document.getElementById('profile3D');
+        const profileWrapper = profileCard?.querySelector('.profile-image-wrapper');
+        
+        if (!profileCard || !profileWrapper) return;
+        
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetRotationX = 0;
+        let targetRotationY = 0;
+        let currentRotationX = 0;
+        let currentRotationY = 0;
+        
+        profileCard.addEventListener('mousemove', (e) => {
+            const rect = profileCard.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            mouseX = e.clientX - centerX;
+            mouseY = e.clientY - centerY;
+            
+            // Calculate rotation based on mouse position (max 20 degrees)
+            targetRotationY = (mouseX / rect.width) * 20;
+            targetRotationX = -(mouseY / rect.height) * 20;
+        });
+        
+        profileCard.addEventListener('mouseleave', () => {
+            targetRotationX = 0;
+            targetRotationY = 0;
+        });
+        
+        // Smooth interpolation for rotation
+        function animateProfile() {
+            currentRotationX += (targetRotationX - currentRotationX) * 0.1;
+            currentRotationY += (targetRotationY - currentRotationY) * 0.1;
+            
+            const floatY = Math.sin(Date.now() / 2000) * 10;
+            profileWrapper.style.transform = `
+                translateY(${floatY}px)
+                rotateY(${currentRotationY}deg)
+                rotateX(${currentRotationX}deg)
+            `;
+            
+            requestAnimationFrame(animateProfile);
+        }
+        
+        animateProfile();
+    })();
+    
+    // Initialize GSAP ScrollTrigger
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Hero animation
+    gsap.from('.hero-title', {
+        duration: 1,
+        y: 50,
+        opacity: 0,
+        ease: 'power3.out'
+    });
+    
+    gsap.from('.hero-subtitle', {
+        duration: 1,
+        y: 30,
+        opacity: 0,
+        delay: 0.2,
+        ease: 'power3.out'
+    });
+    
+    gsap.from('.hero-description', {
+        duration: 1,
+        y: 30,
+        opacity: 0,
+        delay: 0.4,
+        ease: 'power3.out'
+    });
+    
+    gsap.from('.hero-buttons', {
+        duration: 1,
+        y: 30,
+        opacity: 0,
+        delay: 0.6,
+        ease: 'power3.out'
+    });
+    
+    // Scroll-triggered animations
+    gsap.utils.toArray('.skill-card, .project-card-3d, .timeline-item').forEach((element, index) => {
+        gsap.from(element, {
+            scrollTrigger: {
+                trigger: element,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.8,
+            y: 50,
+            opacity: 0,
+            delay: index * 0.1,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}
+

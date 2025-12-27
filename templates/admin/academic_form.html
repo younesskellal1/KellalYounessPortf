@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ 'Edit' if entry else 'Add' }} Academic Entry{% endblock %}
+
+{% block content %}
+<form method="POST" class="admin-form">
+    <div class="form-section">
+        <div class="form-group">
+            <label for="degree">Degree/Certification</label>
+            <input type="text" id="degree" name="degree" value="{{ entry.degree if entry else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="institution">Institution</label>
+            <input type="text" id="institution" name="institution" value="{{ entry.institution if entry else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="year">Year</label>
+            <input type="text" id="year" name="year" value="{{ entry.year if entry else '' }}" placeholder="2020 or 2020-2024">
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="4">{{ entry.description if entry else '' }}</textarea>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>{{ 'Update' if entry else 'Create' }} Entry</span>
+            <i class="fas fa-save"></i>
+        </button>
+        <a href="{{ url_for('admin_academic') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

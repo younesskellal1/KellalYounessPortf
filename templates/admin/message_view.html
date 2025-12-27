@@ -1,0 +1,240 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}View Message{% endblock %}
+
+{% block content %}
+<div class="message-view-container">
+    <div class="message-view-header">
+        <a href="{{ url_for('admin_messages') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Back to Messages
+        </a>
+        <div class="message-actions-header">
+            <form method="POST" action="{{ url_for('admin_message_mark_read', message_id=message.id) }}" style="display: inline;">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-{% if message.read %}envelope{% else %}envelope-open{% endif %}"></i>
+                    Mark as {% if message.read %}Unread{% else %}Read{% endif %}
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_message_delete', message_id=message.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this message?');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="message-view-card">
+        <div class="message-view-meta">
+            <div class="message-view-item">
+                <label>From:</label>
+                <div class="message-view-value">
+                    <i class="fas fa-user"></i>
+                    <strong>{{ message.name }}</strong>
+                    <span class="message-view-email">{{ message.email }}</span>
+                </div>
+            </div>
+            <div class="message-view-item">
+                <label>Date:</label>
+                <div class="message-view-value">
+                    <i class="fas fa-clock"></i>
+                    {{ message.date }}
+                </div>
+            </div>
+            <div class="message-view-item">
+                <label>Status:</label>
+                <div class="message-view-value">
+                    {% if message.read %}
+                    <span class="status-badge read">
+                        <i class="fas fa-check-circle"></i>
+                        Read
+                    </span>
+                    {% else %}
+                    <span class="status-badge unread">
+                        <i class="fas fa-circle"></i>
+                        Unread
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="message-view-subject">
+            <i class="fas fa-tag"></i>
+            <h2>{{ message.subject }}</h2>
+        </div>
+
+        <div class="message-view-content">
+            <label>Message:</label>
+            <div class="message-view-text">
+                {{ message.message|replace('\n', '<br>')|safe }}
+            </div>
+        </div>
+
+        <div class="message-view-footer">
+            <a href="mailto:{{ message.email }}?subject=Re: {{ message.subject }}" class="btn btn-primary">
+                <i class="fas fa-reply"></i>
+                Reply via Email
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.message-view-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.message-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.message-actions-header {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.message-view-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-2xl);
+}
+
+.message-view-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    padding-bottom: var(--spacing-xl);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--spacing-xl);
+}
+
+.message-view-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.message-view-item label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.message-view-value {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.message-view-value i {
+    color: var(--color-primary);
+}
+
+.message-view-email {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-badge.read {
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+}
+
+.status-badge.unread {
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+}
+
+.message-view-subject {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-xl);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.message-view-subject i {
+    color: var(--color-primary);
+    font-size: 1.25rem;
+}
+
+.message-view-subject h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.75rem;
+}
+
+.message-view-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.message-view-content label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.message-view-text {
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    color: var(--text-primary);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.message-view-footer {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+    .message-view-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .message-actions-header {
+        flex-direction: column;
+    }
+    
+    .message-view-meta {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+

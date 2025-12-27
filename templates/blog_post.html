@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<!-- Blog Post Header -->
+<section class="blog-post-header">
+    <div class="container">
+        <a href="{{ url_for('blog') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Blog</span>
+        </a>
+        <div class="blog-post-meta">
+            {% if article.categories %}
+            <div class="blog-post-categories">
+                {% for category in article.categories %}
+                <span class="blog-category-large">{{ category }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="blog-post-date-info">
+                <span class="blog-post-date">
+                    <i class="fas fa-calendar"></i>
+                    {{ article.published_date if article.published_date else 'Draft' }}
+                </span>
+                {% if article.read_time %}
+                <span class="blog-post-read-time">
+                    <i class="fas fa-clock"></i>
+                    {{ article.read_time }} min read
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <h1 class="blog-post-title">{{ article.title }}</h1>
+        {% if article.excerpt %}
+        <p class="blog-post-excerpt">{{ article.excerpt }}</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Blog Post Image -->
+{% if article.image_url %}
+<section class="blog-post-image-section">
+    <div class="container">
+        <div class="blog-post-image-wrapper">
+            <img src="{{ article.image_url }}" alt="{{ article.title }}" class="blog-post-image">
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Blog Post Content -->
+<section class="blog-post-content">
+    <div class="container">
+        <div class="blog-post-grid">
+            <article class="blog-post-main">
+                <div class="blog-post-body">
+                    {{ article.content|safe if article.content else '<p>Content coming soon...</p>' }}
+                </div>
+                
+                {% if article.tags %}
+                <div class="blog-post-tags-section">
+                    <h3>Tags</h3>
+                    <div class="blog-post-tags">
+                        {% for tag in article.tags %}
+                        <a href="{{ url_for('blog', tag=tag) }}" class="blog-tag-large">{{ tag }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </article>
+            
+            <!-- Sidebar -->
+            <aside class="blog-post-sidebar">
+                {% if related_articles %}
+                <div class="related-articles-card">
+                    <h3>Related Articles</h3>
+                    <div class="related-articles-list">
+                        {% for related in related_articles %}
+                        <a href="{{ url_for('blog_post', slug=related.slug) }}" class="related-article-item">
+                            {% if related.image_url %}
+                            <img src="{{ related.image_url }}" alt="{{ related.title }}" class="related-article-image">
+                            {% endif %}
+                            <div class="related-article-content">
+                                <h4>{{ related.title }}</h4>
+                                <span class="related-article-date">{{ related.published_date if related.published_date else 'Draft' }}</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

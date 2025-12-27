@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ 'Edit' if entry else 'Add' }} Project{% endblock %}
+
+{% block content %}
+<form method="POST" class="admin-form">
+    <div class="form-section">
+        <div class="form-group">
+            <label for="title">Project Title</label>
+            <input type="text" id="title" name="title" value="{{ entry.title if entry else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="5" required>{{ entry.description if entry else '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="technologies">Technologies (comma-separated)</label>
+            <input type="text" id="technologies" name="technologies" value="{{ entry.technologies|join(', ') if entry and entry.technologies else '' }}" placeholder="Python, Flask, React, etc.">
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="github_url">GitHub URL</label>
+                <input type="url" id="github_url" name="github_url" value="{{ entry.github_url if entry else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="live_url">Live URL</label>
+                <input type="url" id="live_url" name="live_url" value="{{ entry.live_url if entry else '' }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="image_url">Image URL</label>
+            <input type="url" id="image_url" name="image_url" value="{{ entry.image_url if entry else '' }}">
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="start_date">Start Date</label>
+                <input type="date" id="start_date" name="start_date" value="{{ entry.start_date if entry and entry.start_date else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="end_date">End Date</label>
+                <input type="date" id="end_date" name="end_date" value="{{ entry.end_date if entry and entry.end_date else '' }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="featured" {% if entry and entry.featured %}checked{% endif %}>
+                <span>Featured Project</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>{{ 'Update' if entry else 'Create' }} Project</span>
+            <i class="fas fa-save"></i>
+        </button>
+        <a href="{{ url_for('admin_projects') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

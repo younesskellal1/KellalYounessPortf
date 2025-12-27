@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Skills - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">{{ t('pages.skills_title') }}</h1>
+        <p class="page-subtitle">{{ t('pages.skills_subtitle') }}</p>
+    </div>
+</section>
+
+{% if data.skills %}
+<!-- Skills Summary Cards -->
+<section class="skills-summary-section">
+    <div class="container">
+        <div class="summary-grid">
+            <div class="summary-card-modern">
+                <div class="summary-icon-modern">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div class="summary-content-modern">
+                    <h3>{{ data.skills|length }}</h3>
+                    <p>{{ t('common.total_skills') }}</p>
+                </div>
+                <div class="summary-glow"></div>
+            </div>
+            <div class="summary-card-modern">
+                <div class="summary-icon-modern">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="summary-content-modern">
+                    <h3>{% set category_list = [] %}{% for skill in data.skills %}{% if skill.category not in category_list %}{% set _ = category_list.append(skill.category) %}{% endif %}{% endfor %}{{ category_list|length }}</h3>
+                    <p>{{ t('common.categories') }}</p>
+                </div>
+                <div class="summary-glow"></div>
+            </div>
+            <div class="summary-card-modern">
+                <div class="summary-icon-modern">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="summary-content-modern">
+                    <h3>{{ (data.skills|sum(attribute='level') / data.skills|length)|round|int }}%</h3>
+                    <p>{{ t('common.average_proficiency') }}</p>
+                </div>
+                <div class="summary-glow"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Category Filter -->
+<section class="skills-filter-section">
+    <div class="container">
+        <div class="filter-container">
+            <button class="filter-btn active" data-category="all">
+                <i class="fas fa-th"></i>
+                <span>{{ t('common.all_skills') }}</span>
+            </button>
+            {% set category_list = [] %}
+            {% for skill in data.skills %}
+                {% if skill.category not in category_list %}
+                    {% set _ = category_list.append(skill.category) %}
+                {% endif %}
+            {% endfor %}
+            {% for category in category_list %}
+            <button class="filter-btn" data-category="{{ category|lower|replace(' ', '-') }}">
+                <span>{{ category }}</span>
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Skills Grid -->
+<section class="skills-section-redesigned">
+    <div class="container">
+        {% for category in category_list %}
+        {% set skills_list = data.skills|selectattr("category", "equalto", category)|list %}
+        <div class="skills-category-modern" data-category="{{ category|lower|replace(' ', '-') }}">
+            <div class="category-header-modern">
+                <h2 class="category-title-modern">
+                    <span class="category-icon">
+                        {% if category == "Programming Languages" %}
+                        <i class="fas fa-code"></i>
+                        {% elif category == "AI & Machine Learning" %}
+                        <i class="fas fa-brain"></i>
+                        {% elif category == "Data Science" %}
+                        <i class="fas fa-chart-bar"></i>
+                        {% elif category == "Big Data & Streaming" %}
+                        <i class="fas fa-stream"></i>
+                        {% elif category == "Security" %}
+                        <i class="fas fa-shield-alt"></i>
+                        {% elif category == "Systems & Architecture" %}
+                        <i class="fas fa-network-wired"></i>
+                        {% elif category == "Backend Development" %}
+                        <i class="fas fa-server"></i>
+                        {% elif category == "Cloud & DevOps" %}
+                        <i class="fas fa-cloud"></i>
+                        {% elif category == "DevOps" %}
+                        <i class="fas fa-cogs"></i>
+                        {% else %}
+                        <i class="fas fa-tools"></i>
+                        {% endif %}
+                    </span>
+                    {{ category }}
+                </h2>
+                <span class="category-count">{{ skills_list|length }} {{ t('common.total_skills')|lower }}</span>
+            </div>
+            <div class="skills-grid-modern">
+                {% for skill in skills_list %}
+                <div class="skill-card-modern" data-skill="{{ skill.name|lower }}">
+                    <div class="skill-card-inner-modern">
+                        <div class="skill-icon-modern">
+                            {% if skill.icon %}
+                            <i class="{{ skill.icon }}"></i>
+                            {% else %}
+                            <i class="fas fa-star"></i>
+                            {% endif %}
+                            <div class="skill-icon-glow"></div>
+                        </div>
+                        <div class="skill-info-modern">
+                            <h3 class="skill-name-modern">{{ skill.name }}</h3>
+                            <div class="skill-level-badge">
+                                <span class="level-value">{{ skill.level }}%</span>
+                            </div>
+                        </div>
+                        <div class="skill-progress-modern">
+                            <div class="progress-track">
+                                <div class="progress-fill" data-level="{{ skill.level }}">
+                                    <div class="progress-shine"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if skill.description %}
+                        <div class="skill-description-modern">
+                            <p>{{ skill.description }}</p>
+                        </div>
+                        {% endif %}
+                        <div class="skill-hover-effect"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="skills-section-redesigned">
+    <div class="container">
+        <div class="empty-state">
+            <i class="fas fa-code"></i>
+            <h3>No skills yet</h3>
+            <p>Skills will appear here once added.</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Category filter functionality
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const skillCategories = document.querySelectorAll('.skills-category-modern');
+    
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Update active state
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Filter categories
+            const category = btn.getAttribute('data-category');
+            
+            skillCategories.forEach(cat => {
+                if (category === 'all' || cat.getAttribute('data-category') === category) {
+                    gsap.to(cat, {
+                        opacity: 1,
+                        display: 'block',
+                        duration: 0.3,
+                        ease: 'power2.out'
+                    });
+                } else {
+                    gsap.to(cat, {
+                        opacity: 0,
+                        display: 'none',
+                        duration: 0.3,
+                        ease: 'power2.out'
+                    });
+                }
+            });
+        });
+    });
+    
+    // Animate skill progress bars on scroll
+    gsap.utils.toArray('.progress-fill').forEach((element) => {
+        const level = parseInt(element.getAttribute('data-level'));
+        
+        ScrollTrigger.create({
+            trigger: element.closest('.skill-card-modern'),
+            start: 'top 85%',
+            onEnter: () => {
+                gsap.to(element, {
+                    width: level + '%',
+                    duration: 1.5,
+                    ease: 'power2.out',
+                    delay: Math.random() * 0.3
+                });
+            }
+        });
+    });
+    
+    // Animate skill cards on scroll
+    gsap.utils.toArray('.skill-card-modern').forEach((card, index) => {
+        gsap.from(card, {
+            scrollTrigger: {
+                trigger: card,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.6,
+            y: 30,
+            opacity: 0,
+            delay: (index % 6) * 0.1,
+            ease: 'power2.out'
+        });
+    });
+    
+    // Animate category headers
+    gsap.utils.toArray('.category-header-modern').forEach((header, index) => {
+        gsap.from(header, {
+            scrollTrigger: {
+                trigger: header,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.8,
+            x: -50,
+            opacity: 0,
+            delay: index * 0.15,
+            ease: 'power2.out'
+        });
+    });
+    
+    // 3D hover effect for skill cards
+    document.querySelectorAll('.skill-card-modern').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / 10;
+            const rotateY = (centerX - x) / 10;
+            
+            card.style.transform = `perspective(1000px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = '';
+        });
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ 'Edit' if entry else 'Add' }} Certification{% endblock %}
+
+{% block content %}
+<form method="POST" class="admin-form">
+    <div class="form-section">
+        <div class="form-group">
+            <label for="name">Certification Name</label>
+            <input type="text" id="name" name="name" value="{{ entry.name if entry else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="issuer">Issuing Organization</label>
+            <input type="text" id="issuer" name="issuer" value="{{ entry.issuer if entry else '' }}" required>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="text" id="date" name="date" value="{{ entry.date if entry else '' }}" placeholder="MM/YYYY or YYYY">
+            </div>
+            <div class="form-group">
+                <label for="credential_id">Credential ID</label>
+                <input type="text" id="credential_id" name="credential_id" value="{{ entry.credential_id if entry else '' }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="credential_url">Credential URL</label>
+            <input type="url" id="credential_url" name="credential_url" value="{{ entry.credential_url if entry else '' }}" placeholder="Link to verify the credential">
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>{{ 'Update' if entry else 'Create' }} Certification</span>
+            <i class="fas fa-save"></i>
+        </button>
+        <a href="{{ url_for('admin_certifications') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

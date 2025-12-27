@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ 'Edit' if entry else 'Add' }} Article{% endblock %}
+
+{% block content %}
+<form method="POST" class="admin-form">
+    <div class="form-section">
+        <div class="form-group">
+            <label for="title">Article Title *</label>
+            <input type="text" id="title" name="title" value="{{ entry.title if entry else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="slug">URL Slug</label>
+            <input type="text" id="slug" name="slug" value="{{ entry.slug if entry else '' }}" placeholder="auto-generated-from-title">
+            <small>Leave empty to auto-generate from title. Must be unique and URL-friendly.</small>
+        </div>
+        <div class="form-group">
+            <label for="excerpt">Excerpt</label>
+            <textarea id="excerpt" name="excerpt" rows="3" placeholder="Brief summary of the article">{{ entry.excerpt if entry else '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="content">Content *</label>
+            <textarea id="content" name="content" rows="15" required placeholder="Article content (HTML supported)">{{ entry.content if entry else '' }}</textarea>
+            <small>HTML is supported. Use &lt;p&gt; tags for paragraphs, &lt;h2&gt; for headings, etc.</small>
+        </div>
+        <div class="form-group">
+            <label for="image_url">Featured Image URL</label>
+            <input type="url" id="image_url" name="image_url" value="{{ entry.image_url if entry else '' }}" placeholder="https://example.com/image.jpg">
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="categories">Categories (comma-separated)</label>
+                <input type="text" id="categories" name="categories" value="{{ entry.categories|join(', ') if entry and entry.categories else '' }}" placeholder="Technology, Tutorial, Insights">
+            </div>
+            <div class="form-group">
+                <label for="tags">Tags (comma-separated)</label>
+                <input type="text" id="tags" name="tags" value="{{ entry.tags|join(', ') if entry and entry.tags else '' }}" placeholder="python, flask, web-development">
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="published_date">Published Date</label>
+                <input type="date" id="published_date" name="published_date" value="{{ entry.published_date if entry and entry.published_date else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="read_time">Read Time (minutes)</label>
+                <input type="number" id="read_time" name="read_time" value="{{ entry.read_time if entry else '' }}" min="1" placeholder="5">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="published" {% if entry and entry.published %}checked{% endif %}>
+                <span>Published (visible on blog)</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>{{ 'Update' if entry else 'Create' }} Article</span>
+            <i class="fas fa-save"></i>
+        </button>
+        <a href="{{ url_for('admin_articles') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

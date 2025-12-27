@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ 'Edit' if entry else 'Add' }} Skill{% endblock %}
+
+{% block content %}
+<form method="POST" class="admin-form">
+    <div class="form-section">
+        <div class="form-group">
+            <label for="name">Skill Name</label>
+            <input type="text" id="name" name="name" value="{{ entry.name if entry else '' }}" required>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="category">Category</label>
+                <input type="text" id="category" name="category" value="{{ entry.category if entry else '' }}" placeholder="e.g., Programming, Framework, Tool">
+            </div>
+            <div class="form-group">
+                <label for="level">Level (0-100)</label>
+                <input type="number" id="level" name="level" value="{{ entry.level if entry else 0 }}" min="0" max="100" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="icon">Icon Class (Font Awesome)</label>
+            <input type="text" id="icon" name="icon" value="{{ entry.icon if entry else '' }}" placeholder="e.g., fab fa-python, fas fa-code">
+            <small>Use Font Awesome icon classes (e.g., fab fa-python, fas fa-code)</small>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>{{ 'Update' if entry else 'Create' }} Skill</span>
+            <i class="fas fa-save"></i>
+        </button>
+        <a href="{{ url_for('admin_skills') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

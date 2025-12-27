@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Certifications - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">{{ t('pages.certifications_title') }}</h1>
+        <p class="page-subtitle">{{ t('pages.certifications_subtitle') }}</p>
+    </div>
+</section>
+
+{% if data.certifications %}
+<section class="certifications-section">
+    <div class="container">
+        <div class="certifications-grid">
+            {% for cert in data.certifications %}
+            <div class="cert-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="cert-header">
+                    <div class="cert-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div class="cert-badge">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="cert-content">
+                    <h3 class="cert-name">{{ cert.name }}</h3>
+                    <div class="cert-meta">
+                        <div class="cert-issuer">
+                            <i class="fas fa-building"></i>
+                            <span>{{ cert.issuer }}</span>
+                        </div>
+                        <div class="cert-date">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ cert.date }}</span>
+                        </div>
+                    </div>
+                    {% if cert.credential_id %}
+                    <div class="cert-credential">
+                        <i class="fas fa-id-card"></i>
+                        <span>ID: {{ cert.credential_id }}</span>
+                    </div>
+                    {% endif %}
+                    {% if cert.description %}
+                    <p class="cert-description">{{ cert.description }}</p>
+                    {% endif %}
+                    {% if cert.credential_url %}
+                    <a href="{{ cert.credential_url }}" target="_blank" class="cert-link">
+                        <span>Verify Credential</span>
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    {% endif %}
+                    {% if cert.expiry_date %}
+                    <div class="cert-expiry">
+                        <i class="fas fa-clock"></i>
+                        <span>Expires: {{ cert.expiry_date }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Certifications Summary -->
+<section class="certifications-summary-section">
+    <div class="container">
+        <div class="summary-card-large">
+            <div class="summary-icon-large">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="summary-content-large">
+                <h2>{{ data.certifications|length }}</h2>
+                <p>Professional Certifications</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="certifications-section">
+    <div class="container">
+        <div class="empty-state">
+            <i class="fas fa-certificate"></i>
+            <h3>No certifications yet</h3>
+            <p>Certifications will appear here once added.</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Animate certification cards
+    gsap.utils.toArray('.cert-card').forEach((element, index) => {
+        gsap.from(element, {
+            scrollTrigger: {
+                trigger: element,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.8,
+            y: 50,
+            opacity: 0,
+            delay: index * 0.1,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,89 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Manage Screenshots - {{ project.title }}{% endblock %}
+
+{% block content %}
+<div class="screenshots-header">
+    <a href="{{ url_for('admin_projects') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i>
+        Back to Projects
+    </a>
+    <div class="header-content">
+        <h2>{{ project.title }} - Screenshots</h2>
+        <p>Upload and manage project screenshots</p>
+    </div>
+</div>
+
+<!-- Upload Form -->
+<div class="screenshot-upload-section">
+    <h3>Upload New Screenshot</h3>
+    <form method="POST" enctype="multipart/form-data" class="screenshot-upload-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="screenshot">Screenshot Image</label>
+                <input type="file" id="screenshot" name="screenshot" accept="image/*" required>
+                <small>Accepted formats: JPG, PNG, GIF, WEBP (Max 5MB)</small>
+            </div>
+            <div class="form-group">
+                <label for="caption">Caption (Optional)</label>
+                <input type="text" id="caption" name="caption" placeholder="Brief description of the screenshot">
+            </div>
+        </div>
+        <input type="hidden" name="uploaded_at" value="">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>Upload Screenshot</span>
+            <i class="fas fa-upload"></i>
+        </button>
+    </form>
+</div>
+
+<!-- Existing Screenshots -->
+<div class="screenshots-list-section">
+    <h3>Project Screenshots ({{ project.screenshots|length if project.screenshots else 0 }})</h3>
+    
+    {% if project.screenshots and project.screenshots|length > 0 %}
+    <div class="screenshots-grid-admin">
+        {% for screenshot in project.screenshots %}
+        <div class="screenshot-card-admin">
+            <div class="screenshot-preview">
+                <img src="{{ url_for('static', filename='uploads/project_screenshots/' + screenshot.filename) }}" 
+                     alt="{{ screenshot.caption if screenshot.caption else 'Screenshot' }}">
+            </div>
+            <div class="screenshot-info-admin">
+                {% if screenshot.caption %}
+                <p class="screenshot-caption-admin">{{ screenshot.caption }}</p>
+                {% else %}
+                <p class="screenshot-caption-admin text-muted">No caption</p>
+                {% endif %}
+                <p class="screenshot-filename">{{ screenshot.filename }}</p>
+            </div>
+            <div class="screenshot-actions-admin">
+                <form method="POST" action="{{ url_for('admin_project_screenshot_delete', item_id=project.id, screenshot_id=screenshot.id) }}" 
+                      style="display: inline;" 
+                      onsubmit="return confirm('Are you sure you want to delete this screenshot?');">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-images"></i>
+        <h3>No screenshots yet</h3>
+        <p>Upload screenshots to showcase this project.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set upload date
+    document.querySelector('input[name="uploaded_at"]').value = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}
+

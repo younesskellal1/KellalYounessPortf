@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}About - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">{{ t('pages.about_title') }}</h1>
+        <p class="page-subtitle">{{ t('pages.about_subtitle') }}</p>
+    </div>
+</section>
+
+<section class="about-section">
+    <div class="container">
+        <div class="about-content">
+            <div class="about-text">
+                <h2 class="section-title">Who I Am</h2>
+                <p class="about-bio">{{ data.personal_info.bio if data.personal_info.bio else 'A passionate developer creating innovative solutions.' }}</p>
+                
+                <div class="about-info-grid">
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>Email</h4>
+                            <p>{{ data.personal_info.email if data.personal_info.email else 'your.email@example.com' }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h4>Phone</h4>
+                            <p>{{ data.personal_info.phone if data.personal_info.phone else '+1 (555) 000-0000' }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h4>Location</h4>
+                            <p>{{ data.personal_info.location if data.personal_info.location else 'City, Country' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if data.skills %}
+<section class="skills-section">
+    <div class="container">
+        <h2 class="section-title">Skills & Technologies</h2>
+        <div class="skills-container">
+            {% for skill in data.skills %}
+            <div class="skill-item" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
+                <div class="skill-header">
+                    <span class="skill-name">{{ skill.name }}</span>
+                    <span class="skill-level">{{ skill.level }}%</span>
+                </div>
+                <div class="skill-progress-wrapper">
+                    <div class="skill-progress-bar" style="width: {{ skill.level }}%">
+                        <span class="skill-progress-glow"></span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if data.academic %}
+<section class="academic-section">
+    <div class="container">
+        <h2 class="section-title">Education</h2>
+        <div class="academic-timeline">
+            {% for edu in data.academic %}
+            <div class="timeline-item" data-aos="fade-right">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <h3 class="timeline-title">{{ edu.degree }}</h3>
+                    <p class="timeline-institution">{{ edu.institution }}</p>
+                    <span class="timeline-year">{{ edu.year }}</span>
+                    {% if edu.description %}
+                    <p class="timeline-description">{{ edu.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if data.certifications %}
+<section class="certifications-section">
+    <div class="container">
+        <h2 class="section-title">Certifications</h2>
+        <div class="certifications-grid">
+            {% for cert in data.certifications %}
+            <div class="cert-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="cert-icon">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                <div class="cert-content">
+                    <h3 class="cert-name">{{ cert.name }}</h3>
+                    <p class="cert-issuer">{{ cert.issuer }}</p>
+                    <span class="cert-date">{{ cert.date }}</span>
+                    {% if cert.credential_url %}
+                    <a href="{{ cert.credential_url }}" target="_blank" class="cert-link">
+                        View Credential <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Animate skill bars on scroll
+    gsap.utils.toArray('.skill-item').forEach((element) => {
+        const progressBar = element.querySelector('.skill-progress-bar');
+        const level = parseInt(element.querySelector('.skill-level').textContent);
+        
+        ScrollTrigger.create({
+            trigger: element,
+            start: 'top 80%',
+            onEnter: () => {
+                gsap.to(progressBar, {
+                    width: level + '%',
+                    duration: 1.5,
+                    ease: 'power2.out'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
+

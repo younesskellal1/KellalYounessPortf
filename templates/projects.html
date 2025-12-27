@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">{{ t('pages.my_projects') }}</h1>
+        <p class="page-subtitle">{{ t('pages.projects_subtitle') }}</p>
+    </div>
+</section>
+
+<section class="projects-section">
+    <div class="container">
+        {% if data.projects %}
+        <div class="projects-grid-full">
+            {% for project in data.projects %}
+            <div class="project-card-3d" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="project-card-inner">
+                    <div class="project-image">
+                        {% if project.image_url %}
+                        <img src="{{ project.image_url }}" alt="{{ project.title }}">
+                        {% else %}
+                        <div class="project-placeholder">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        {% endif %}
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                {% if project.github_url %}
+                                <a href="{{ project.github_url }}" target="_blank" class="project-link">
+                                    <i class="fab fa-github"></i>
+                                    <span>Code</span>
+                                </a>
+                                {% endif %}
+                                {% if project.live_url %}
+                                <a href="{{ project.live_url }}" target="_blank" class="project-link">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    <span>Live</span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if project.featured %}
+                        <span class="project-badge">Featured</span>
+                        {% endif %}
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">{{ project.title }}</h3>
+                        <p class="project-description">{{ project.description[:150] }}{% if project.description|length > 150 %}...{% endif %}</p>
+                        <div class="project-technologies">
+                            {% for tech in project.technologies[:4] %}
+                            <span class="tech-tag">{{ tech }}</span>
+                            {% endfor %}
+                            {% if project.technologies|length > 4 %}
+                            <span class="tech-tag">+{{ project.technologies|length - 4 }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="project-actions">
+                            <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <h3>No projects yet</h3>
+            <p>Projects will appear here once added.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    gsap.utils.toArray('.project-card-3d').forEach((element, index) => {
+        gsap.from(element, {
+            scrollTrigger: {
+                trigger: element,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.8,
+            y: 50,
+            opacity: 0,
+            delay: index * 0.1,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}
+

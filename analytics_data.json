@@ -1,0 +1,97 @@
+{
+  "page_views": {
+    "/": 49,
+    "/projects/3": 1,
+    "/projects": 6,
+    "/education": 5,
+    "/certifications": 5,
+    "/contact": 6,
+    "/blog": 4,
+    "/skills": 4,
+    "/contact/admin/login": 1,
+    "/favicon.ico": 8,
+    "/download-cv": 1,
+    "/about": 1
+  },
+  "section_views": {
+    "home": 47,
+    "project_detail": 1,
+    "projects": 5,
+    "education": 5,
+    "certifications": 5,
+    "contact": 6,
+    "blog": 4,
+    "skills": 4,
+    "about": 1
+  },
+  "daily_views": {
+    "2025-12-24": 35,
+    "2025-12-25": 43,
+    "2025-12-27": 13
+  },
+  "unique_visitors": [
+    "aba3824c-2972-4de0-8343-f1904de39a9e",
+    "f77903c7-8877-437b-ae2a-338e92dcf508",
+    "6129b3ea-bc6b-416a-af09-e77f3e6160c6",
+    "3ed139ab-d392-40a5-9933-5f65649896c2"
+  ],
+  "visitor_sessions": {
+    "aba3824c-2972-4de0-8343-f1904de39a9e": {
+      "first_visit": "2025-12-24",
+      "last_visit": "2025-12-24",
+      "total_visits": 22,
+      "pages_visited": [
+        "/",
+        "/projects/3",
+        "/projects",
+        "/education",
+        "/certifications",
+        "/contact",
+        "/blog",
+        "/skills",
+        "/contact/admin/login"
+      ]
+    },
+    "f77903c7-8877-437b-ae2a-338e92dcf508": {
+      "first_visit": "2025-12-24",
+      "last_visit": "2025-12-24",
+      "total_visits": 13,
+      "pages_visited": [
+        "/",
+        "/projects",
+        "/skills",
+        "/blog",
+        "/certifications",
+        "/education"
+      ]
+    },
+    "6129b3ea-bc6b-416a-af09-e77f3e6160c6": {
+      "first_visit": "2025-12-25",
+      "last_visit": "2025-12-25",
+      "total_visits": 43,
+      "pages_visited": [
+        "/",
+        "/projects",
+        "/education",
+        "/skills",
+        "/certifications",
+        "/blog",
+        "/contact",
+        "/favicon.ico",
+        "/download-cv",
+        "/about"
+      ]
+    },
+    "3ed139ab-d392-40a5-9933-5f65649896c2": {
+      "first_visit": "2025-12-27",
+      "last_visit": "2025-12-27",
+      "total_visits": 13,
+      "pages_visited": [
+        "/",
+        "/favicon.ico"
+      ]
+    }
+  },
+  "total_views": 91,
+  "last_reset": "2025-12-24T20:10:02.639329"
+}

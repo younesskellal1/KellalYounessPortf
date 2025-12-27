@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Translations Management{% endblock %}
+
+{% block content %}
+<div class="translations-header">
+    <h2>Manage Translations</h2>
+    <p>Edit translations for English, French, and Arabic</p>
+</div>
+
+<div class="languages-grid">
+    {% for code, name in languages.items() %}
+    <div class="language-card">
+        <div class="language-header">
+            <div class="language-flag">
+                {% if code == 'en' %}
+                <i class="fas fa-flag"></i>
+                {% elif code == 'fr' %}
+                <i class="fas fa-flag"></i>
+                {% elif code == 'ar' %}
+                <i class="fas fa-flag"></i>
+                {% endif %}
+            </div>
+            <div class="language-info">
+                <h3>{{ name }}</h3>
+                <span class="language-code">{{ code|upper }}</span>
+            </div>
+        </div>
+        <div class="language-stats">
+            {% set lang_translations = translations.get(code, {}) %}
+            {% set total_keys = 0 %}
+            {% for section in lang_translations.values() %}
+                {% if section is mapping %}
+                    {% set total_keys = total_keys + section|length %}
+                {% endif %}
+            {% endfor %}
+            <span>{{ total_keys }} translations</span>
+        </div>
+        <a href="{{ url_for('admin_translations_language', language=code) }}" class="btn btn-primary">
+            <i class="fas fa-edit"></i>
+            Edit Translations
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="translations-info">
+    <h3>Translation Structure</h3>
+    <p>Translations are organized by sections:</p>
+    <ul>
+        <li><strong>nav</strong> - Navigation menu items</li>
+        <li><strong>hero</strong> - Hero section buttons</li>
+        <li><strong>sections</strong> - Section titles and links</li>
+        <li><strong>pages</strong> - Page titles and subtitles</li>
+        <li><strong>common</strong> - Common UI elements</li>
+    </ul>
+</div>
+{% endblock %}
+

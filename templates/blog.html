@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Blog - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">Blog</h1>
+        <p class="page-subtitle">Articles, tutorials, and tech insights</p>
+    </div>
+</section>
+
+<!-- Blog Search and Filters -->
+<section class="blog-filters-section">
+    <div class="container">
+        <div class="blog-filters">
+            <form method="GET" action="{{ url_for('blog') }}" class="blog-search-form">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="search" placeholder="Search articles..." value="{{ search_query }}" class="search-input">
+                    <button type="submit" class="search-btn">Search</button>
+                </div>
+            </form>
+            
+            <div class="filter-tags">
+                {% if all_categories %}
+                <div class="filter-group">
+                    <span class="filter-label">Categories:</span>
+                    <a href="{{ url_for('blog') }}" class="filter-tag {% if not category %}active{% endif %}">All</a>
+                    {% for cat in all_categories %}
+                    <a href="{{ url_for('blog', category=cat) }}" class="filter-tag {% if category == cat %}active{% endif %}">{{ cat }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if all_tags %}
+                <div class="filter-group">
+                    <span class="filter-label">Tags:</span>
+                    <a href="{{ url_for('blog') }}" class="filter-tag {% if not tag %}active{% endif %}">All</a>
+                    {% for t in all_tags %}
+                    <a href="{{ url_for('blog', tag=t) }}" class="filter-tag {% if tag == t %}active{% endif %}">{{ t }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Articles -->
+<section class="blog-section">
+    <div class="container">
+        {% if articles %}
+        <div class="blog-grid">
+            {% for article in articles %}
+            <article class="blog-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="blog-card-image">
+                    {% if article.image_url %}
+                    <img src="{{ article.image_url }}" alt="{{ article.title }}">
+                    {% else %}
+                    <div class="blog-placeholder">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    {% endif %}
+                    {% if article.categories %}
+                    <div class="blog-categories">
+                        {% for category in article.categories[:2] %}
+                        <span class="blog-category">{{ category }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="blog-card-content">
+                    <div class="blog-meta">
+                        <span class="blog-date">
+                            <i class="fas fa-calendar"></i>
+                            {{ article.published_date if article.published_date else 'Draft' }}
+                        </span>
+                        {% if article.read_time %}
+                        <span class="blog-read-time">
+                            <i class="fas fa-clock"></i>
+                            {{ article.read_time }} min read
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h2 class="blog-title">
+                        <a href="{{ url_for('blog_post', slug=article.slug) }}">{{ article.title }}</a>
+                    </h2>
+                    {% if article.excerpt %}
+                    <p class="blog-excerpt">{{ article.excerpt }}</p>
+                    {% endif %}
+                    {% if article.tags %}
+                    <div class="blog-tags">
+                        {% for tag in article.tags[:3] %}
+                        <span class="blog-tag">{{ tag }}</span>
+                        {% endfor %}
+                        {% if article.tags|length > 3 %}
+                        <span class="blog-tag">+{{ article.tags|length - 3 }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <a href="{{ url_for('blog_post', slug=article.slug) }}" class="blog-read-more">
+                        Read More <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-newspaper"></i>
+            <h3>No articles yet</h3>
+            <p>{% if search_query or category or tag %}No articles match your filters.{% else %}Articles will appear here once published.{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    gsap.utils.toArray('.blog-card').forEach((element, index) => {
+        gsap.from(element, {
+            scrollTrigger: {
+                trigger: element,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.8,
+            y: 50,
+            opacity: 0,
+            delay: index * 0.1,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}
+
