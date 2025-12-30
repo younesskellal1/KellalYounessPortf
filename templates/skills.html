@@ -49,6 +49,22 @@
     </div>
 </section>
 
+<!-- Skills Radar Chart Section -->
+<section class="skills-chart-section">
+    <div class="container">
+        <div class="chart-container">
+            <h2 class="section-title">Skills Overview - Radar Chart</h2>
+            <p class="section-subtitle">Visual representation of skill proficiency across categories</p>
+            <div class="chart-wrapper">
+                <canvas id="skillsRadarChart"></canvas>
+            </div>
+            <div class="chart-legend">
+                <p class="chart-note">Hover over the chart to see detailed values. The chart shows average proficiency per category.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Category Filter -->
 <section class="skills-filter-section">
     <div class="container">
@@ -266,6 +282,142 @@
             card.style.transform = '';
         });
     });
+</script>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get skills data from the page
+    const skillsData = {{ data.skills|tojson }};
+    
+    // Group skills by category and calculate average proficiency
+    const categoryAverages = {};
+    const categoryCounts = {};
+    
+    skillsData.forEach(skill => {
+        const category = skill.category || 'Other';
+        if (!categoryAverages[category]) {
+            categoryAverages[category] = 0;
+            categoryCounts[category] = 0;
+        }
+        categoryAverages[category] += skill.level || 0;
+        categoryCounts[category] += 1;
+    });
+    
+    // Calculate averages
+    const categories = Object.keys(categoryAverages);
+    const averages = categories.map(cat => 
+        Math.round(categoryAverages[cat] / categoryCounts[cat])
+    );
+    
+    // Get current theme
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const isLight = currentTheme === 'light';
+    
+    // Chart colors based on theme
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const textColor = isLight ? '#1a1a1a' : '#ffffff';
+    const pointColor = isLight ? '#0066cc' : '#00f0ff';
+    const fillColor = isLight ? 'rgba(0, 102, 204, 0.2)' : 'rgba(0, 240, 255, 0.2)';
+    const borderColor = isLight ? '#0066cc' : '#00f0ff';
+    
+    // Create radar chart
+    const ctx = document.getElementById('skillsRadarChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: categories,
+                datasets: [{
+                    label: 'Average Proficiency (%)',
+                    data: averages,
+                    backgroundColor: fillColor,
+                    borderColor: borderColor,
+                    borderWidth: 2,
+                    pointBackgroundColor: pointColor,
+                    pointBorderColor: '#ffffff',
+                    pointHoverBackgroundColor: '#ffffff',
+                    pointHoverBorderColor: pointColor,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.2,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            color: textColor,
+                            font: {
+                                family: 'Rajdhani, sans-serif',
+                                size: 14,
+                                weight: '600'
+                            },
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(10, 10, 15, 0.95)',
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        borderColor: borderColor,
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.r + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        min: 0,
+                        ticks: {
+                            stepSize: 20,
+                            color: textColor,
+                            font: {
+                                family: 'Rajdhani, sans-serif',
+                                size: 12
+                            },
+                            backdropColor: 'transparent'
+                        },
+                        grid: {
+                            color: gridColor,
+                            lineWidth: 1
+                        },
+                        pointLabels: {
+                            color: textColor,
+                            font: {
+                                family: 'Rajdhani, sans-serif',
+                                size: 13,
+                                weight: '600'
+                            },
+                            padding: 10
+                        },
+                        angleLines: {
+                            color: gridColor,
+                            lineWidth: 1
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1500,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
 

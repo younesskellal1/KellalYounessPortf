@@ -79,6 +79,10 @@
     <div class="action-card">
         <h3>Data Management</h3>
         <div class="action-buttons">
+            <a href="{{ url_for('admin_database') }}" class="btn btn-primary">
+                <i class="fas fa-database"></i>
+                Database Explorer
+            </a>
             <form method="POST" action="{{ url_for('admin_export') }}" style="display: inline;">
                 <button type="submit" class="btn btn-secondary">
                     <i class="fas fa-download"></i>
@@ -124,6 +128,10 @@
                 <span class="badge-count">{{ unread_count }}</span>
                 {% endif %}
             {% endif %}
+        </a>
+        <a href="{{ url_for('admin_database') }}" class="quick-link-card">
+            <i class="fas fa-database"></i>
+            <span>Database Explorer</span>
         </a>
     </div>
 </div>

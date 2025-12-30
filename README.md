@@ -41,9 +41,9 @@ pip install -r requirements.txt
 4. Configure environment variables (optional):
 ```bash
 # Set these in your environment or modify config.py
+# NOTE: Admin credentials are now managed in the application's SQLite database.
+# The app will create a default admin user if none exists (username: admin, password: admin12345).
 export SECRET_KEY="your-secret-key-here"
-export ADMIN_USERNAME="admin"
-export ADMIN_PASSWORD="your-secure-password"
 ```
 
 5. Run the application:
@@ -54,7 +54,7 @@ python app.py
 6. Access the application:
 - Public site: http://localhost:5000
 - Admin dashboard: http://localhost:5000/admin/login
-  - Default credentials: admin / admin123 (change in production!)
+  - Default credentials (created in DB if none present): admin / admin12345 (change in production!)
 
 ## Project Structure
 

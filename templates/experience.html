@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Experience - {{ data.personal_info.name if data.personal_info.name else 'Portfolio' }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">Work Experience</h1>
+        <p class="page-subtitle">My professional journey and career milestones</p>
+    </div>
+</section>
+
+{% if data.work_experience %}
+<section class="experience-section">
+    <div class="container">
+        <div class="experience-timeline">
+            {% for exp in data.work_experience %}
+            <div class="timeline-item" data-aos="fade-right" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="timeline-marker">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <h3 class="timeline-title">{{ exp.job_title }}</h3>
+                        <span class="timeline-company">{{ exp.company }}</span>
+                    </div>
+                    <div class="timeline-meta">
+                        {% if exp.location %}
+                        <span class="timeline-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ exp.location }}
+                        </span>
+                        {% endif %}
+                        <span class="timeline-period">
+                            <i class="fas fa-calendar-alt"></i>
+                            {{ exp.start_date }}
+                            {% if exp.end_date %}
+                                - {{ exp.end_date }}
+                            {% elif exp.current %}
+                                - Present
+                            {% endif %}
+                        </span>
+                        {% if exp.current %}
+                        <span class="badge badge-current">Current</span>
+                        {% endif %}
+                    </div>
+                    {% if exp.description %}
+                    <div class="timeline-description-wrapper">
+                        <p class="timeline-description">{{ exp.description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if exp.responsibilities and exp.responsibilities|length > 0 %}
+                    <div class="timeline-details">
+                        <h4 class="details-title">
+                            <i class="fas fa-tasks"></i>
+                            Key Responsibilities
+                        </h4>
+                        <ul class="details-list">
+                            {% for resp in exp.responsibilities %}
+                            <li>{{ resp }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if exp.achievements and exp.achievements|length > 0 %}
+                    <div class="timeline-details">
+                        <h4 class="details-title">
+                            <i class="fas fa-trophy"></i>
+                            Key Achievements
+                        </h4>
+                        <ul class="details-list">
+                            {% for achievement in exp.achievements %}
+                            <li>{{ achievement }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if exp.technologies and exp.technologies|length > 0 %}
+                    <div class="timeline-technologies">
+                        <h4 class="details-title">
+                            <i class="fas fa-code"></i>
+                            Technologies
+                        </h4>
+                        <div class="tech-tags">
+                            {% for tech in exp.technologies %}
+                            <span class="tech-tag">{{ tech }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Experience Summary -->
+<section class="experience-summary-section">
+    <div class="container">
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="summary-content">
+                    <h3>{{ data.work_experience|length }}</h3>
+                    <p>Positions</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="summary-content">
+                    <h3>{{ data.work_experience|selectattr('current', 'equalto', true)|list|length }}</h3>
+                    <p>Current Positions</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="summary-content">
+                    <h3>{% if data.work_experience and data.work_experience|length > 0 %}{{ data.work_experience[0].start_date }}{% else %}N/A{% endif %}</h3>
+                    <p>Earliest Experience</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="experience-section">
+    <div class="container">
+        <div class="empty-state">
+            <i class="fas fa-briefcase"></i>
+            <h3>No work experience entries yet</h3>
+            <p>Work experience will appear here once added.</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Animate timeline items
+    gsap.utils.toArray('.timeline-item').forEach((element, index) => {
+        gsap.from(element, {
+            scrollTrigger: {
+                trigger: element,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            },
+            duration: 0.8,
+            x: -50,
+            opacity: 0,
+            delay: index * 0.15,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}
+

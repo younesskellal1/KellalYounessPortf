@@ -1,0 +1,88 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ 'Edit' if entry else 'Add' }} Work Experience{% endblock %}
+
+{% block content %}
+<form method="POST" class="admin-form">
+    <div class="form-section">
+        <h3>Basic Information</h3>
+        <div class="form-group">
+            <label for="job_title">Job Title *</label>
+            <input type="text" id="job_title" name="job_title" value="{{ entry.job_title if entry else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="company">Company *</label>
+            <input type="text" id="company" name="company" value="{{ entry.company if entry else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" id="location" name="location" value="{{ entry.location if entry else '' }}" placeholder="City, Country">
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>Duration</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="start_date">Start Date *</label>
+                <input type="text" id="start_date" name="start_date" value="{{ entry.start_date if entry else '' }}" placeholder="YYYY-MM or YYYY" required>
+            </div>
+            <div class="form-group">
+                <label for="end_date">End Date</label>
+                <input type="text" id="end_date" name="end_date" value="{{ entry.end_date if entry else '' }}" placeholder="YYYY-MM or YYYY">
+                <small>Leave empty if current position</small>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="current" name="current" {% if entry and entry.current %}checked{% endif %}>
+                <span>Current Position</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>Description</h3>
+        <div class="form-group">
+            <label for="description">Job Description</label>
+            <textarea id="description" name="description" rows="4">{{ entry.description if entry else '' }}</textarea>
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>Responsibilities</h3>
+        <div class="form-group">
+            <label for="responsibilities">Key Responsibilities</label>
+            <textarea id="responsibilities" name="responsibilities" rows="6" placeholder="Enter one responsibility per line">{{ entry.responsibilities|join('\n') if entry and entry.responsibilities else '' }}</textarea>
+            <small>Enter one responsibility per line</small>
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>Achievements</h3>
+        <div class="form-group">
+            <label for="achievements">Key Achievements</label>
+            <textarea id="achievements" name="achievements" rows="6" placeholder="Enter one achievement per line">{{ entry.achievements|join('\n') if entry and entry.achievements else '' }}</textarea>
+            <small>Enter one achievement per line</small>
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>Technologies</h3>
+        <div class="form-group">
+            <label for="technologies">Technologies Used</label>
+            <input type="text" id="technologies" name="technologies" value="{{ entry.technologies|join(', ') if entry and entry.technologies else '' }}" placeholder="Python, JavaScript, React, etc.">
+            <small>Separate technologies with commas</small>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-glow">
+            <span>{{ 'Update' if entry else 'Create' }} Entry</span>
+            <i class="fas fa-save"></i>
+        </button>
+        <a href="{{ url_for('admin_work_experience') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

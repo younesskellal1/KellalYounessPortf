@@ -1,0 +1,456 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Database Explorer{% endblock %}
+
+{% block content %}
+<div class="database-explorer">
+    <div class="explorer-header">
+        <h2>Database Explorer</h2>
+        <p>Browse and explore your SQLite database</p>
+    </div>
+
+    <div class="database-layout">
+        <!-- Sidebar: Table List -->
+        <aside class="database-sidebar">
+            <h3>Tables</h3>
+            <div class="table-list">
+                {% for table in table_info %}
+                <a href="{{ url_for('admin_database_table', table_name=table.name) }}" 
+                   class="table-item {% if selected_table == table.name %}active{% endif %}">
+                    <div class="table-name">{{ table.name }}</div>
+                    <div class="table-stats">
+                        <span class="row-count">{{ table.row_count }} rows</span>
+                        <span class="column-count">{{ table.columns }} cols</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="database-content">
+            {% if query_result %}
+            <!-- Query Results -->
+            <div class="query-results-section">
+                <div class="section-header">
+                    <h3>Query Results</h3>
+                    <div class="query-info">
+                        <span>{{ query_result.row_count }} rows returned</span>
+                    </div>
+                </div>
+                
+                <div class="query-display">
+                    <pre class="sql-query">{{ query_text }}</pre>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                {% for column in query_result.columns %}
+                                <th>{{ column }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in query_result.rows %}
+                            <tr>
+                                {% for column in query_result.columns %}
+                                <td>
+                                    {% if row[column] is mapping or row[column] is iterable and row[column] is not string %}
+                                        <pre class="json-cell">{{ row[column]|tojson(indent=2) }}</pre>
+                                    {% else %}
+                                        {{ row[column]|default('NULL', true) }}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% elif selected_table %}
+            <!-- Table View -->
+            <div class="table-view-section">
+                <div class="section-header">
+                    <h3>{{ selected_table }}</h3>
+                    <div class="table-meta">
+                        <span>{{ row_count }} total rows</span>
+                        <span>{{ schema|length }} columns</span>
+                    </div>
+                </div>
+
+                <!-- Schema Information -->
+                <div class="schema-section">
+                    <h4>Schema</h4>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Type</th>
+                                <th>Primary Key</th>
+                                <th>Not Null</th>
+                                <th>Default</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for col in schema %}
+                            <tr>
+                                <td><strong>{{ col.name }}</strong></td>
+                                <td><code>{{ col.type }}</code></td>
+                                <td>{% if col.pk %}<i class="fas fa-check text-success"></i>{% else %}-{% endif %}</td>
+                                <td>{% if col.notnull %}<i class="fas fa-check text-success"></i>{% else %}-{% endif %}</td>
+                                <td><code>{{ col.default_value or '-' }}</code></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Data -->
+                <div class="data-section">
+                    <h4>Data</h4>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    {% for col in schema %}
+                                    <th>{{ col.name }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in data %}
+                                <tr>
+                                    {% for col in schema %}
+                                    <td>
+                                        {% set value = row[col.name] %}
+                                        {% if value is mapping or (value is iterable and value is not string) %}
+                                            <pre class="json-cell">{{ value|tojson(indent=2) }}</pre>
+                                        {% elif value is none %}
+                                            <span class="null-value">NULL</span>
+                                        {% else %}
+                                            {{ value }}
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if total_pages > 1 %}
+                    <div class="pagination">
+                        {% if page > 1 %}
+                        <a href="{{ url_for('admin_database_table', table_name=selected_table, page=page-1, limit=limit) }}" 
+                           class="btn btn-sm btn-secondary">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                        {% endif %}
+                        
+                        <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+                        
+                        {% if page < total_pages %}
+                        <a href="{{ url_for('admin_database_table', table_name=selected_table, page=page+1, limit=limit) }}" 
+                           class="btn btn-sm btn-secondary">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <!-- Welcome Screen -->
+            <div class="welcome-screen">
+                <div class="welcome-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3>Database Explorer</h3>
+                <p>Select a table from the sidebar to view its structure and data, or use the SQL query tool below.</p>
+            </div>
+            {% endif %}
+
+            <!-- SQL Query Tool -->
+            <div class="sql-query-section">
+                <h4>SQL Query Tool</h4>
+                <p class="query-note">Execute read-only SELECT queries (INSERT, UPDATE, DELETE, DROP are not allowed for security)</p>
+                <form method="POST" action="{{ url_for('admin_database_query') }}">
+                    <div class="query-input-group">
+                        <textarea name="query" class="sql-textarea" rows="5" 
+                                  placeholder="SELECT * FROM projects LIMIT 10;">{{ query_text or '' }}</textarea>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Execute Query
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+.database-explorer {
+    padding: 20px;
+}
+
+.explorer-header {
+    margin-bottom: 30px;
+}
+
+.explorer-header h2 {
+    margin: 0 0 5px 0;
+    color: var(--color-text);
+}
+
+.explorer-header p {
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.database-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 20px;
+    min-height: 600px;
+}
+
+.database-sidebar {
+    background: var(--color-card);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.database-sidebar h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1em;
+    color: var(--color-text);
+}
+
+.table-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.table-item {
+    padding: 12px;
+    background: var(--color-bg);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.table-item:hover {
+    background: var(--color-accent-light);
+    border-color: var(--color-accent);
+}
+
+.table-item.active {
+    background: var(--color-accent);
+    color: white;
+    border-color: var(--color-accent);
+}
+
+.table-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.table-stats {
+    font-size: 0.85em;
+    opacity: 0.8;
+    display: flex;
+    gap: 10px;
+}
+
+.database-content {
+    background: var(--color-card);
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.section-header h3 {
+    margin: 0;
+    color: var(--color-text);
+}
+
+.table-meta, .query-info {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+}
+
+.schema-section, .data-section, .query-results-section {
+    margin-bottom: 30px;
+}
+
+.schema-section h4, .data-section h4 {
+    margin: 0 0 15px 0;
+    color: var(--color-text);
+}
+
+.schema-table, .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.schema-table th, .data-table th {
+    background: var(--color-bg);
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--color-border);
+    color: var(--color-text);
+}
+
+.schema-table td, .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+
+.schema-table tr:hover, .data-table tr:hover {
+    background: var(--color-bg);
+}
+
+.json-cell {
+    margin: 0;
+    padding: 5px;
+    background: var(--color-bg);
+    border-radius: 4px;
+    font-size: 0.85em;
+    max-width: 300px;
+    overflow-x: auto;
+}
+
+.null-value {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+}
+
+.page-info {
+    color: var(--color-text-secondary);
+}
+
+.welcome-screen {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--color-text-secondary);
+}
+
+.welcome-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    color: var(--color-accent);
+}
+
+.welcome-screen h3 {
+    margin: 0 0 10px 0;
+    color: var(--color-text);
+}
+
+.sql-query-section {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid var(--color-border);
+}
+
+.sql-query-section h4 {
+    margin: 0 0 10px 0;
+    color: var(--color-text);
+}
+
+.query-note {
+    font-size: 0.85em;
+    color: var(--color-text-secondary);
+    margin-bottom: 15px;
+}
+
+.query-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sql-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    background: var(--color-bg);
+    color: var(--color-text);
+    resize: vertical;
+}
+
+.sql-textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.query-display {
+    margin-bottom: 20px;
+}
+
+.sql-query {
+    background: var(--color-bg);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    overflow-x: auto;
+    margin: 0;
+}
+
+.table-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .database-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .database-sidebar {
+        order: 2;
+    }
+    
+    .database-content {
+        order: 1;
+    }
+}
+</style>
+{% endblock %}
+

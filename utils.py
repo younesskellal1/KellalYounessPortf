@@ -1,5 +1,5 @@
 """
-Utility functions for JSON CRUD operations and file handling
+Utility functions for SQLite database operations and file handling
 """
 import json
 import os
@@ -9,26 +9,28 @@ from werkzeug.utils import secure_filename
 import shutil
 from datetime import datetime, date
 from collections import defaultdict
+from database import Database
 
-def load_portfolio_data(file_path: Path) -> Dict[str, Any]:
-    """Load portfolio data from JSON file"""
-    if not file_path.exists():
-        # Initialize with default structure
-        default_data = {
-            "personal_info": {
-                "name": "Your Name",
-                "title": "Full-Stack Developer",
-                "email": "your.email@example.com",
-                "phone": "+1 (555) 000-0000",
-                "location": "City, Country",
-                "bio": "A passionate developer creating innovative solutions.",
-                "social_links": {
-                    "github": "https://github.com/yourusername",
-                    "linkedin": "https://linkedin.com/in/yourusername",
-                    "twitter": "https://twitter.com/yourusername"
-                },
-                "profile_image": "/static/images/profile.jpg"
-            },
+# Global database instance (initialized on first use)
+_db_instance = None
+
+def get_db() -> Database:
+    """Get or create database instance"""
+    global _db_instance
+    if _db_instance is None:
+        from config import DATABASE_PATH
+        _db_instance = Database(DATABASE_PATH)
+    return _db_instance
+
+def load_portfolio_data(file_path: Path = None) -> Dict[str, Any]:
+    """Load portfolio data from SQLite database"""
+    try:
+        db = get_db()
+        return db.load_portfolio_data()
+    except Exception as e:
+        print(f"Error loading portfolio data: {e}")
+        return {
+            "personal_info": {},
             "academic": [],
             "projects": [],
             "skills": [],
@@ -38,38 +40,21 @@ def load_portfolio_data(file_path: Path) -> Dict[str, Any]:
             "articles": [],
             "testimonials": []
         }
-        save_portfolio_data(file_path, default_data)
-        return default_data
-    
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (json.JSONDecodeError, IOError) as e:
-        print(f"Error loading portfolio data: {e}")
-        return {}
 
 def save_portfolio_data(file_path: Path, data: Dict[str, Any]) -> bool:
-    """Save portfolio data to JSON file atomically"""
+    """Save portfolio data to SQLite database"""
     try:
-        # Write to temporary file first
-        temp_path = file_path.with_suffix('.json.tmp')
-        with open(temp_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        db = get_db()
         
-        # Atomic replace
-        if os.name == 'nt':  # Windows
-            if file_path.exists():
-                os.replace(temp_path, file_path)
-            else:
-                temp_path.rename(file_path)
-        else:  # Unix-like
-            os.replace(temp_path, file_path)
+        # Save personal info
+        if "personal_info" in data:
+            db.save_personal_info(data["personal_info"], data.get("cv_file"))
         
+        # Note: Individual CRUD operations should be used for adding/updating/deleting items
+        # This function is kept for compatibility but should ideally use specific methods
         return True
     except Exception as e:
         print(f"Error saving portfolio data: {e}")
-        if temp_path.exists():
-            temp_path.unlink()
         return False
 
 def get_item_by_id(items: List[Dict], item_id: str) -> Optional[Dict]:
@@ -161,10 +146,8 @@ def delete_cv_file(filename: str, upload_folder: Path) -> bool:
 def export_portfolio_data(file_path: Path, export_path: Path) -> bool:
     """Export portfolio data to a backup file"""
     try:
-        data = load_portfolio_data(file_path)
-        with open(export_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        return True
+        db = get_db()
+        return db.export_portfolio_data(export_path)
     except Exception as e:
         print(f"Error exporting portfolio data: {e}")
         return False
@@ -172,33 +155,19 @@ def export_portfolio_data(file_path: Path, export_path: Path) -> bool:
 def import_portfolio_data(file_path: Path, import_path: Path) -> bool:
     """Import portfolio data from a backup file"""
     try:
-        with open(import_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        return save_portfolio_data(file_path, data)
+        db = get_db()
+        return db.import_portfolio_data(import_path)
     except Exception as e:
         print(f"Error importing portfolio data: {e}")
         return False
 
 # ==================== ANALYTICS FUNCTIONS ====================
 
-def load_analytics_data(file_path: Path) -> Dict[str, Any]:
-    """Load analytics data from JSON file"""
-    if not file_path.exists():
-        default_data = {
-            "page_views": {},
-            "section_views": {},
-            "daily_views": {},
-            "unique_visitors": [],
-            "visitor_sessions": {},
-            "total_views": 0,
-            "last_reset": None
-        }
-        save_analytics_data(file_path, default_data)
-        return default_data
-    
+def load_analytics_data(file_path: Path = None) -> Dict[str, Any]:
+    """Load analytics data from SQLite database"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        db = get_db()
+        return db.load_analytics_data()
     except Exception as e:
         print(f"Error loading analytics data: {e}")
         return {
@@ -212,147 +181,50 @@ def load_analytics_data(file_path: Path) -> Dict[str, Any]:
         }
 
 def save_analytics_data(file_path: Path, data: Dict[str, Any]) -> bool:
-    """Save analytics data to JSON file atomically"""
-    try:
-        # Create backup
-        if file_path.exists():
-            backup_path = file_path.with_suffix('.json.bak')
-            shutil.copy2(file_path, backup_path)
-        
-        # Write to temporary file first
-        temp_path = file_path.with_suffix('.json.tmp')
-        with open(temp_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        
-        # Atomic move
-        if os.name == 'nt':  # Windows
-            if file_path.exists():
-                os.replace(temp_path, file_path)
-            else:
-                temp_path.rename(file_path)
-        else:  # Unix-like
-            os.replace(temp_path, file_path)
-        
-        # Remove backup if successful
-        backup_path = file_path.with_suffix('.json.bak')
-        if backup_path.exists():
-            backup_path.unlink()
-        
-        return True
-    except Exception as e:
-        print(f"Error saving analytics data: {e}")
-        # Restore from backup if available
-        backup_path = file_path.with_suffix('.json.bak')
-        if backup_path.exists():
-            try:
-                if os.name == 'nt':
-                    os.replace(backup_path, file_path)
-                else:
-                    backup_path.replace(file_path)
-            except:
-                pass
-        return False
+    """Save analytics data (kept for compatibility, but analytics are tracked directly)"""
+    # Analytics are now tracked directly in the database, this function is kept for compatibility
+    return True
 
 def track_page_view(file_path: Path, route: str, visitor_id: str = None) -> None:
     """Track a page view"""
-    data = load_analytics_data(file_path)
-    today = date.today().isoformat()
-    
-    # Track page views
-    if route not in data['page_views']:
-        data['page_views'][route] = 0
-    data['page_views'][route] += 1
-    
-    # Track daily views
-    if today not in data['daily_views']:
-        data['daily_views'][today] = 0
-    data['daily_views'][today] += 1
-    
-    # Track unique visitors
-    if visitor_id and visitor_id not in data['unique_visitors']:
-        data['unique_visitors'].append(visitor_id)
-    
-    # Track visitor sessions
-    if visitor_id:
-        if visitor_id not in data['visitor_sessions']:
-            data['visitor_sessions'][visitor_id] = {
-                'first_visit': today,
-                'last_visit': today,
-                'total_visits': 0,
-                'pages_visited': []
-            }
-        data['visitor_sessions'][visitor_id]['last_visit'] = today
-        data['visitor_sessions'][visitor_id]['total_visits'] += 1
-        if route not in data['visitor_sessions'][visitor_id]['pages_visited']:
-            data['visitor_sessions'][visitor_id]['pages_visited'].append(route)
-    
-    # Increment total views
-    data['total_views'] += 1
-    
-    save_analytics_data(file_path, data)
+    try:
+        db = get_db()
+        db.track_page_view(route, visitor_id)
+    except Exception as e:
+        print(f"Error tracking page view: {e}")
 
 def track_section_view(file_path: Path, section: str) -> None:
     """Track a section view (e.g., skills, projects, etc.)"""
-    data = load_analytics_data(file_path)
-    
-    if section not in data['section_views']:
-        data['section_views'][section] = 0
-    data['section_views'][section] += 1
-    
-    save_analytics_data(file_path, data)
+    try:
+        db = get_db()
+        db.track_section_view(section)
+    except Exception as e:
+        print(f"Error tracking section view: {e}")
 
-def get_analytics_summary(file_path: Path) -> Dict[str, Any]:
+def get_analytics_summary(file_path: Path = None) -> Dict[str, Any]:
     """Get analytics summary for dashboard"""
-    data = load_analytics_data(file_path)
-    
-    # Get top pages
-    top_pages = sorted(
-        data['page_views'].items(),
-        key=lambda x: x[1],
-        reverse=True
-    )[:10]
-    
-    # Get top sections
-    top_sections = sorted(
-        data['section_views'].items(),
-        key=lambda x: x[1],
-        reverse=True
-    )[:10]
-    
-    # Get daily views for last 30 days
-    daily_views_list = sorted(
-        data['daily_views'].items(),
-        key=lambda x: x[0],
-        reverse=True
-    )[:30]
-    
-    # Calculate unique visitors count
-    unique_visitors_count = len(data['unique_visitors'])
-    
-    # Calculate average views per day (last 30 days)
-    recent_days = daily_views_list[:30]
-    avg_daily_views = sum(views for _, views in recent_days) / len(recent_days) if recent_days else 0
-    
-    return {
-        'total_views': data['total_views'],
-        'unique_visitors': unique_visitors_count,
-        'top_pages': top_pages,
-        'top_sections': top_sections,
-        'daily_views': daily_views_list,
-        'avg_daily_views': round(avg_daily_views, 2),
-        'visitor_sessions': len(data['visitor_sessions'])
-    }
+    try:
+        db = get_db()
+        return db.get_analytics_summary()
+    except Exception as e:
+        print(f"Error getting analytics summary: {e}")
+        return {
+            'total_views': 0,
+            'unique_visitors': 0,
+            'top_pages': [],
+            'top_sections': [],
+            'daily_views': [],
+            'avg_daily_views': 0,
+            'visitor_sessions': 0
+        }
 
-def reset_analytics(file_path: Path) -> bool:
+def reset_analytics(file_path: Path = None) -> bool:
     """Reset all analytics data"""
-    default_data = {
-        "page_views": {},
-        "section_views": {},
-        "daily_views": {},
-        "unique_visitors": [],
-        "visitor_sessions": {},
-        "total_views": 0,
-        "last_reset": datetime.now().isoformat()
-    }
-    return save_analytics_data(file_path, default_data)
+    try:
+        db = get_db()
+        db.reset_analytics()
+        return True
+    except Exception as e:
+        print(f"Error resetting analytics: {e}")
+        return False
 

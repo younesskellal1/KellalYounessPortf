@@ -68,7 +68,7 @@
             {% endfor %}
         </div>
         <div class="section-footer">
-            <a href="{{ url_for('about') }}" class="btn btn-outline">{{ t('sections.view_all_skills') }}</a>
+            <a href="{{ url_for('skills') }}" class="btn btn-outline">{{ t('sections.view_all_skills') }}</a>
         </div>
     </div>
 </section>
@@ -164,6 +164,42 @@
         </div>
         <div class="section-footer">
             <a href="{{ url_for('projects') }}" class="btn btn-outline">{{ t('sections.view_all_projects') }}</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Work Experience Preview Section -->
+{% if data.work_experience %}
+<section class="experience-preview-section">
+    <div class="container">
+        <h2 class="section-title">Work Experience</h2>
+        <div class="experience-timeline-preview">
+            {% for exp in data.work_experience[:3] %}
+            <div class="timeline-item-preview" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="timeline-marker-preview">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="timeline-content-preview">
+                    <h3 class="timeline-title-preview">{{ exp.job_title }}</h3>
+                    <p class="timeline-company-preview">{{ exp.company }}</p>
+                    <span class="timeline-period-preview">
+                        {{ exp.start_date }}
+                        {% if exp.end_date %}
+                            - {{ exp.end_date }}
+                        {% elif exp.current %}
+                            - Present
+                        {% endif %}
+                    </span>
+                    {% if exp.description %}
+                    <p class="timeline-description-preview">{{ exp.description[:150] }}{% if exp.description|length > 150 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="section-footer">
+            <a href="{{ url_for('experience') }}" class="btn btn-outline">View All Experience</a>
         </div>
     </div>
 </section>

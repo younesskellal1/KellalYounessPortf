@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 from config import (
     SECRET_KEY, PORTFOLIO_DATA_PATH, CV_UPLOAD_FOLDER,
-    PROJECT_SCREENSHOTS_FOLDER, ADMIN_USERNAME, ADMIN_PASSWORD,
+    PROJECT_SCREENSHOTS_FOLDER,
     ALLOWED_EXTENSIONS, ALLOWED_IMAGE_EXTENSIONS, ANALYTICS_DATA_PATH
 )
 from utils import (
@@ -14,7 +14,7 @@ from utils import (
     generate_id, save_cv_file, delete_cv_file, export_portfolio_data,
     import_portfolio_data, allowed_file, save_screenshot, delete_screenshot,
     load_analytics_data, track_page_view, track_section_view, get_analytics_summary, reset_analytics,
-    generate_slug
+    generate_slug, get_db
 )
 from i18n import (
     get_current_language, set_language, get_translation,
@@ -25,6 +25,16 @@ from i18n import (
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Ensure an admin user exists in the database. Create default admin if none found.
+# The application will use database-only authentication from now on.
+try:
+    db = get_db()
+    if db.get_admin_credentials() is None:
+        # Create default admin user (username: admin, password: admin12345)
+        db.create_admin_user('admin', 'admin12345')
+except Exception as e:
+    print(f"Error initializing admin user: {e}")
 
 # ==================== ANALYTICS MIDDLEWARE ====================
 @app.before_request
@@ -154,14 +164,12 @@ def contact():
         }
         
         # Add to messages
-        if 'messages' not in data:
-            data['messages'] = []
-        data['messages'].append(new_message)
-        
-        # Save
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        db = get_db()
+        try:
+            db.add_message(new_message)
             flash('Thank you for your message! I will get back to you soon.', 'success')
-        else:
+        except Exception as e:
+            print(f"Error saving message: {e}")
             flash('Error sending message. Please try again.', 'error')
         
         return redirect(url_for('contact'))
@@ -185,6 +193,12 @@ def education():
     """Education page"""
     data = load_portfolio_data(PORTFOLIO_DATA_PATH)
     return render_template('education.html', data=data)
+
+@app.route('/experience')
+def experience():
+    """Work Experience page"""
+    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
+    return render_template('experience.html', data=data)
 
 @app.route('/blog')
 def blog():
@@ -299,11 +313,16 @@ def admin_login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        # Try database authentication first
+        db = get_db()
+        if db.verify_admin_credentials(username, password):
             session['admin_logged_in'] = True
+            session['admin_username'] = username
+            db.record_admin_login(username)
             flash('Login successful!', 'success')
             return redirect(url_for('admin_dashboard'))
         else:
+            # Database-only authentication: no environment-variable fallback.
             flash('Invalid credentials.', 'error')
     
     return render_template('admin/login.html')
@@ -312,6 +331,7 @@ def admin_login():
 def admin_logout():
     """Admin logout"""
     session.pop('admin_logged_in', None)
+    session.pop('admin_username', None)
     flash('Logged out successfully.', 'success')
     return redirect(url_for('admin_login'))
 
@@ -332,24 +352,27 @@ def admin_personal_info():
     data = load_portfolio_data(PORTFOLIO_DATA_PATH)
     
     if request.method == 'POST':
-        personal_info = data.get('personal_info', {})
-        personal_info['name'] = request.form.get('name', '')
-        personal_info['title'] = request.form.get('title', '')
-        personal_info['email'] = request.form.get('email', '')
-        personal_info['phone'] = request.form.get('phone', '')
-        personal_info['location'] = request.form.get('location', '')
-        personal_info['bio'] = request.form.get('bio', '')
-        personal_info['social_links'] = {
-            'github': request.form.get('github', ''),
-            'linkedin': request.form.get('linkedin', ''),
-            'twitter': request.form.get('twitter', '')
+        db = get_db()
+        personal_info = {
+            'name': request.form.get('name', ''),
+            'title': request.form.get('title', ''),
+            'email': request.form.get('email', ''),
+            'phone': request.form.get('phone', ''),
+            'location': request.form.get('location', ''),
+            'bio': request.form.get('bio', ''),
+            'social_links': {
+                'github': request.form.get('github', ''),
+                'linkedin': request.form.get('linkedin', ''),
+                'twitter': request.form.get('twitter', '')
+            },
+            'profile_image': data.get('personal_info', {}).get('profile_image', '/static/images/profile.jpg')
         }
         
-        data['personal_info'] = personal_info
-        
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.save_personal_info(personal_info, data.get('cv_file'))
             flash('Personal information updated successfully!', 'success')
-        else:
+        except Exception as e:
+            print(f"Error updating personal info: {e}")
             flash('Error updating personal information.', 'error')
         
         return redirect(url_for('admin_personal_info'))
@@ -370,9 +393,7 @@ def admin_academic():
 def admin_academic_add():
     """Add new academic entry"""
     if request.method == 'POST':
-        data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-        academic = data.get('academic', [])
-        
+        db = get_db()
         new_entry = {
             'id': generate_id(),
             'degree': request.form.get('degree', ''),
@@ -381,13 +402,12 @@ def admin_academic_add():
             'description': request.form.get('description', '')
         }
         
-        academic.append(new_entry)
-        data['academic'] = academic
-        
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.add_academic(new_entry)
             flash('Academic entry added successfully!', 'success')
             return redirect(url_for('admin_academic'))
-        else:
+        except Exception as e:
+            print(f"Error adding academic entry: {e}")
             flash('Error adding academic entry.', 'error')
     
     return render_template('admin/academic_form.html')
@@ -405,15 +425,20 @@ def admin_academic_edit(item_id):
         return redirect(url_for('admin_academic'))
     
     if request.method == 'POST':
-        entry['degree'] = request.form.get('degree', '')
-        entry['institution'] = request.form.get('institution', '')
-        entry['year'] = request.form.get('year', '')
-        entry['description'] = request.form.get('description', '')
+        db = get_db()
+        updated_entry = {
+            'degree': request.form.get('degree', ''),
+            'institution': request.form.get('institution', ''),
+            'year': request.form.get('year', ''),
+            'description': request.form.get('description', '')
+        }
         
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.update_academic(item_id, updated_entry)
             flash('Academic entry updated successfully!', 'success')
             return redirect(url_for('admin_academic'))
-        else:
+        except Exception as e:
+            print(f"Error updating academic entry: {e}")
             flash('Error updating academic entry.', 'error')
     
     return render_template('admin/academic_form.html', entry=entry)
@@ -422,17 +447,105 @@ def admin_academic_edit(item_id):
 @admin_required
 def admin_academic_delete(item_id):
     """Delete academic entry"""
-    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-    academic = data.get('academic', [])
-    academic = [item for item in academic if item.get('id') != item_id]
-    data['academic'] = academic
-    
-    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+    db = get_db()
+    try:
+        db.delete_academic(item_id)
         flash('Academic entry deleted successfully!', 'success')
-    else:
+    except Exception as e:
+        print(f"Error deleting academic entry: {e}")
         flash('Error deleting academic entry.', 'error')
     
     return redirect(url_for('admin_academic'))
+
+# ==================== ADMIN CRUD - WORK EXPERIENCE ====================
+
+@app.route('/admin/work-experience')
+@admin_required
+def admin_work_experience():
+    """List all work experience entries"""
+    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
+    return render_template('admin/work_experience.html', data=data)
+
+@app.route('/admin/work-experience/add', methods=['GET', 'POST'])
+@admin_required
+def admin_work_experience_add():
+    """Add new work experience entry"""
+    if request.method == 'POST':
+        db = get_db()
+        new_entry = {
+            'id': generate_id(),
+            'job_title': request.form.get('job_title', ''),
+            'company': request.form.get('company', ''),
+            'location': request.form.get('location', ''),
+            'start_date': request.form.get('start_date', ''),
+            'end_date': request.form.get('end_date', ''),
+            'current': request.form.get('current') == 'on',
+            'description': request.form.get('description', ''),
+            'responsibilities': [r.strip() for r in request.form.get('responsibilities', '').split('\n') if r.strip()],
+            'achievements': [a.strip() for a in request.form.get('achievements', '').split('\n') if a.strip()],
+            'technologies': [t.strip() for t in request.form.get('technologies', '').split(',') if t.strip()]
+        }
+        
+        try:
+            db.add_work_experience(new_entry)
+            flash('Work experience entry added successfully!', 'success')
+            return redirect(url_for('admin_work_experience'))
+        except Exception as e:
+            print(f"Error adding work experience: {e}")
+            flash('Error adding work experience entry.', 'error')
+    
+    return render_template('admin/work_experience_form.html')
+
+@app.route('/admin/work-experience/edit/<item_id>', methods=['GET', 'POST'])
+@admin_required
+def admin_work_experience_edit(item_id):
+    """Edit work experience entry"""
+    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
+    work_experience = data.get('work_experience', [])
+    entry = get_item_by_id(work_experience, item_id)
+    
+    if not entry:
+        flash('Work experience entry not found.', 'error')
+        return redirect(url_for('admin_work_experience'))
+    
+    if request.method == 'POST':
+        db = get_db()
+        updated_entry = {
+            'job_title': request.form.get('job_title', ''),
+            'company': request.form.get('company', ''),
+            'location': request.form.get('location', ''),
+            'start_date': request.form.get('start_date', ''),
+            'end_date': request.form.get('end_date', ''),
+            'current': request.form.get('current') == 'on',
+            'description': request.form.get('description', ''),
+            'responsibilities': [r.strip() for r in request.form.get('responsibilities', '').split('\n') if r.strip()],
+            'achievements': [a.strip() for a in request.form.get('achievements', '').split('\n') if a.strip()],
+            'technologies': [t.strip() for t in request.form.get('technologies', '').split(',') if t.strip()]
+        }
+        
+        try:
+            db.update_work_experience(item_id, updated_entry)
+            flash('Work experience entry updated successfully!', 'success')
+            return redirect(url_for('admin_work_experience'))
+        except Exception as e:
+            print(f"Error updating work experience: {e}")
+            flash('Error updating work experience entry.', 'error')
+    
+    return render_template('admin/work_experience_form.html', entry=entry)
+
+@app.route('/admin/work-experience/delete/<item_id>', methods=['POST'])
+@admin_required
+def admin_work_experience_delete(item_id):
+    """Delete work experience entry"""
+    db = get_db()
+    try:
+        db.delete_work_experience(item_id)
+        flash('Work experience entry deleted successfully!', 'success')
+    except Exception as e:
+        print(f"Error deleting work experience: {e}")
+        flash('Error deleting work experience entry.', 'error')
+    
+    return redirect(url_for('admin_work_experience'))
 
 # ==================== ADMIN CRUD - PROJECTS ====================
 
@@ -448,9 +561,7 @@ def admin_projects():
 def admin_projects_add():
     """Add new project"""
     if request.method == 'POST':
-        data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-        projects = data.get('projects', [])
-        
+        db = get_db()
         new_entry = {
             'id': generate_id(),
             'title': request.form.get('title', ''),
@@ -465,13 +576,12 @@ def admin_projects_add():
             'screenshots': []
         }
         
-        projects.append(new_entry)
-        data['projects'] = projects
-        
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.add_project(new_entry)
             flash('Project added successfully!', 'success')
             return redirect(url_for('admin_projects'))
-        else:
+        except Exception as e:
+            print(f"Error adding project: {e}")
             flash('Error adding project.', 'error')
     
     return render_template('admin/projects_form.html')
@@ -489,22 +599,26 @@ def admin_projects_edit(item_id):
         return redirect(url_for('admin_projects'))
     
     if request.method == 'POST':
-        entry['title'] = request.form.get('title', '')
-        entry['description'] = request.form.get('description', '')
-        entry['technologies'] = [t.strip() for t in request.form.get('technologies', '').split(',') if t.strip()]
-        entry['github_url'] = request.form.get('github_url', '')
-        entry['live_url'] = request.form.get('live_url', '')
-        entry['image_url'] = request.form.get('image_url', '')
-        entry['start_date'] = request.form.get('start_date', '')
-        entry['end_date'] = request.form.get('end_date', '')
-        entry['featured'] = request.form.get('featured') == 'on'
-        if 'screenshots' not in entry:
-            entry['screenshots'] = []
+        db = get_db()
+        updated_entry = {
+            'title': request.form.get('title', ''),
+            'description': request.form.get('description', ''),
+            'technologies': [t.strip() for t in request.form.get('technologies', '').split(',') if t.strip()],
+            'github_url': request.form.get('github_url', ''),
+            'live_url': request.form.get('live_url', ''),
+            'image_url': request.form.get('image_url', ''),
+            'start_date': request.form.get('start_date', ''),
+            'end_date': request.form.get('end_date', ''),
+            'featured': request.form.get('featured') == 'on',
+            'screenshots': entry.get('screenshots', [])
+        }
         
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.update_project(item_id, updated_entry)
             flash('Project updated successfully!', 'success')
             return redirect(url_for('admin_projects'))
-        else:
+        except Exception as e:
+            print(f"Error updating project: {e}")
             flash('Error updating project.', 'error')
     
     return render_template('admin/projects_form.html', entry=entry)
@@ -523,12 +637,12 @@ def admin_projects_delete(item_id):
             if screenshot.get('filename'):
                 delete_screenshot(screenshot['filename'], PROJECT_SCREENSHOTS_FOLDER)
     
-    projects = [item for item in projects if item.get('id') != item_id]
-    data['projects'] = projects
-    
-    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+    db = get_db()
+    try:
+        db.delete_project(item_id)
         flash('Project deleted successfully!', 'success')
-    else:
+    except Exception as e:
+        print(f"Error deleting project: {e}")
         flash('Error deleting project.', 'error')
     
     return redirect(url_for('admin_projects'))
@@ -551,20 +665,19 @@ def admin_project_screenshots(item_id):
             if file and file.filename:
                 filename = save_screenshot(file, PROJECT_SCREENSHOTS_FOLDER)
                 if filename:
-                    if 'screenshots' not in project:
-                        project['screenshots'] = []
-                    
+                    db = get_db()
                     screenshot_data = {
                         'id': generate_id(),
                         'filename': filename,
                         'caption': request.form.get('caption', ''),
                         'uploaded_at': request.form.get('uploaded_at', '')
                     }
-                    project['screenshots'].append(screenshot_data)
                     
-                    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+                    try:
+                        db.add_project_screenshot(item_id, screenshot_data)
                         flash('Screenshot uploaded successfully!', 'success')
-                    else:
+                    except Exception as e:
+                        print(f"Error saving screenshot: {e}")
                         flash('Error saving screenshot information.', 'error')
                 else:
                     flash('Invalid file format. Please upload JPG, PNG, GIF, or WEBP.', 'error')
@@ -591,11 +704,12 @@ def admin_project_screenshot_delete(item_id, screenshot_id):
             if screenshot.get('filename'):
                 delete_screenshot(screenshot['filename'], PROJECT_SCREENSHOTS_FOLDER)
             
-            project['screenshots'] = [s for s in project['screenshots'] if s.get('id') != screenshot_id]
-            
-            if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+            db = get_db()
+            try:
+                db.delete_project_screenshot(screenshot_id)
                 flash('Screenshot deleted successfully!', 'success')
-            else:
+            except Exception as e:
+                print(f"Error deleting screenshot: {e}")
                 flash('Error deleting screenshot.', 'error')
         else:
             flash('Screenshot not found.', 'error')
@@ -616,9 +730,7 @@ def admin_skills():
 def admin_skills_add():
     """Add new skill"""
     if request.method == 'POST':
-        data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-        skills = data.get('skills', [])
-        
+        db = get_db()
         new_entry = {
             'id': generate_id(),
             'name': request.form.get('name', ''),
@@ -627,14 +739,12 @@ def admin_skills_add():
             'icon': request.form.get('icon', '')
         }
         
-        skills.append(new_entry)
-        data['skills'] = data.get('skills', [])
-        data['skills'] = skills
-        
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.add_skill(new_entry)
             flash('Skill added successfully!', 'success')
             return redirect(url_for('admin_skills'))
-        else:
+        except Exception as e:
+            print(f"Error adding skill: {e}")
             flash('Error adding skill.', 'error')
     
     return render_template('admin/skills_form.html')
@@ -652,15 +762,20 @@ def admin_skills_edit(item_id):
         return redirect(url_for('admin_skills'))
     
     if request.method == 'POST':
-        entry['name'] = request.form.get('name', '')
-        entry['level'] = int(request.form.get('level', 0))
-        entry['category'] = request.form.get('category', '')
-        entry['icon'] = request.form.get('icon', '')
+        db = get_db()
+        updated_entry = {
+            'name': request.form.get('name', ''),
+            'level': int(request.form.get('level', 0)),
+            'category': request.form.get('category', ''),
+            'icon': request.form.get('icon', '')
+        }
         
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.update_skill(item_id, updated_entry)
             flash('Skill updated successfully!', 'success')
             return redirect(url_for('admin_skills'))
-        else:
+        except Exception as e:
+            print(f"Error updating skill: {e}")
             flash('Error updating skill.', 'error')
     
     return render_template('admin/skills_form.html', entry=entry)
@@ -669,14 +784,12 @@ def admin_skills_edit(item_id):
 @admin_required
 def admin_skills_delete(item_id):
     """Delete skill"""
-    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-    skills = data.get('skills', [])
-    skills = [item for item in skills if item.get('id') != item_id]
-    data['skills'] = skills
-    
-    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+    db = get_db()
+    try:
+        db.delete_skill(item_id)
         flash('Skill deleted successfully!', 'success')
-    else:
+    except Exception as e:
+        print(f"Error deleting skill: {e}")
         flash('Error deleting skill.', 'error')
     
     return redirect(url_for('admin_skills'))
@@ -695,9 +808,7 @@ def admin_certifications():
 def admin_certifications_add():
     """Add new certification"""
     if request.method == 'POST':
-        data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-        certifications = data.get('certifications', [])
-        
+        db = get_db()
         new_entry = {
             'id': generate_id(),
             'name': request.form.get('name', ''),
@@ -707,13 +818,12 @@ def admin_certifications_add():
             'credential_url': request.form.get('credential_url', '')
         }
         
-        certifications.append(new_entry)
-        data['certifications'] = certifications
-        
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.add_certification(new_entry)
             flash('Certification added successfully!', 'success')
             return redirect(url_for('admin_certifications'))
-        else:
+        except Exception as e:
+            print(f"Error adding certification: {e}")
             flash('Error adding certification.', 'error')
     
     return render_template('admin/certifications_form.html')
@@ -731,16 +841,21 @@ def admin_certifications_edit(item_id):
         return redirect(url_for('admin_certifications'))
     
     if request.method == 'POST':
-        entry['name'] = request.form.get('name', '')
-        entry['issuer'] = request.form.get('issuer', '')
-        entry['date'] = request.form.get('date', '')
-        entry['credential_id'] = request.form.get('credential_id', '')
-        entry['credential_url'] = request.form.get('credential_url', '')
+        db = get_db()
+        updated_entry = {
+            'name': request.form.get('name', ''),
+            'issuer': request.form.get('issuer', ''),
+            'date': request.form.get('date', ''),
+            'credential_id': request.form.get('credential_id', ''),
+            'credential_url': request.form.get('credential_url', '')
+        }
         
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.update_certification(item_id, updated_entry)
             flash('Certification updated successfully!', 'success')
             return redirect(url_for('admin_certifications'))
-        else:
+        except Exception as e:
+            print(f"Error updating certification: {e}")
             flash('Error updating certification.', 'error')
     
     return render_template('admin/certifications_form.html', entry=entry)
@@ -749,14 +864,12 @@ def admin_certifications_edit(item_id):
 @admin_required
 def admin_certifications_delete(item_id):
     """Delete certification"""
-    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-    certifications = data.get('certifications', [])
-    certifications = [item for item in certifications if item.get('id') != item_id]
-    data['certifications'] = certifications
-    
-    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+    db = get_db()
+    try:
+        db.delete_certification(item_id)
         flash('Certification deleted successfully!', 'success')
-    else:
+    except Exception as e:
+        print(f"Error deleting certification: {e}")
         flash('Error deleting certification.', 'error')
     
     return redirect(url_for('admin_certifications'))
@@ -781,10 +894,12 @@ def admin_cv():
                 # Save new CV
                 filename = save_cv_file(file, CV_UPLOAD_FOLDER)
                 if filename:
-                    data['cv_file'] = filename
-                    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+                    db = get_db()
+                    try:
+                        db.save_personal_info(data.get('personal_info', {}), filename)
                         flash('CV uploaded successfully!', 'success')
-                    else:
+                    except Exception as e:
+                        print(f"Error saving CV: {e}")
                         flash('Error saving CV information.', 'error')
                 else:
                     flash('Invalid file format. Please upload PDF, DOC, or DOCX.', 'error')
@@ -802,10 +917,12 @@ def admin_cv_delete():
     
     if cv_file:
         if delete_cv_file(cv_file, CV_UPLOAD_FOLDER):
-            data['cv_file'] = None
-            if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+            db = get_db()
+            try:
+                db.save_personal_info(data.get('personal_info', {}), None)
                 flash('CV deleted successfully!', 'success')
-            else:
+            except Exception as e:
+                print(f"Error updating CV: {e}")
                 flash('Error updating CV information.', 'error')
         else:
             flash('Error deleting CV file.', 'error')
@@ -839,8 +956,12 @@ def admin_message_view(message_id):
         return redirect(url_for('admin_messages'))
     
     # Mark as read
-    message['read'] = True
-    save_portfolio_data(PORTFOLIO_DATA_PATH, data)
+    db = get_db()
+    try:
+        message['read'] = True
+        db.update_message(message_id, message)
+    except Exception as e:
+        print(f"Error updating message: {e}")
     
     return render_template('admin/message_view.html', data=data, message=message)
 
@@ -848,14 +969,12 @@ def admin_message_view(message_id):
 @admin_required
 def admin_message_delete(message_id):
     """Delete a message"""
-    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-    messages = data.get('messages', [])
-    messages = [msg for msg in messages if msg.get('id') != message_id]
-    data['messages'] = messages
-    
-    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+    db = get_db()
+    try:
+        db.delete_message(message_id)
         flash('Message deleted successfully!', 'success')
-    else:
+    except Exception as e:
+        print(f"Error deleting message: {e}")
         flash('Error deleting message.', 'error')
     
     return redirect(url_for('admin_messages'))
@@ -869,11 +988,14 @@ def admin_message_mark_read(message_id):
     message = get_item_by_id(messages, message_id)
     
     if message:
+        db = get_db()
         message['read'] = not message.get('read', False)
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        try:
+            db.update_message(message_id, message)
             status = 'read' if message['read'] else 'unread'
             flash(f'Message marked as {status}.', 'success')
-        else:
+        except Exception as e:
+            print(f"Error updating message: {e}")
             flash('Error updating message.', 'error')
     else:
         flash('Message not found.', 'error')
@@ -898,6 +1020,83 @@ def admin_analytics_reset():
     else:
         flash('Error resetting analytics data.', 'error')
     return redirect(url_for('admin_analytics'))
+
+# ==================== ADMIN - DATABASE EXPLORER ====================
+
+@app.route('/admin/database')
+@admin_required
+def admin_database():
+    """Database explorer - show all tables"""
+    db = get_db()
+    try:
+        table_info = db.get_table_info()
+        return render_template('admin/database.html', table_info=table_info, selected_table=None)
+    except Exception as e:
+        flash(f'Error loading database information: {e}', 'error')
+        return render_template('admin/database.html', table_info=[], selected_table=None)
+
+@app.route('/admin/database/table/<table_name>')
+@admin_required
+def admin_database_table(table_name):
+    """View table data and schema"""
+    db = get_db()
+    try:
+        # Get table info
+        table_info = db.get_table_info()
+        
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 50, type=int)
+        offset = (page - 1) * limit
+        
+        # Get table schema
+        schema = db.get_table_schema(table_name)
+        
+        # Get table data
+        row_count = db.get_table_row_count(table_name)
+        data = db.get_table_data(table_name, limit=limit, offset=offset)
+        
+        # Calculate pagination
+        total_pages = (row_count + limit - 1) // limit if row_count > 0 else 1
+        
+        return render_template('admin/database.html',
+                             table_info=table_info,
+                             selected_table=table_name,
+                             schema=schema,
+                             data=data,
+                             row_count=row_count,
+                             page=page,
+                             limit=limit,
+                             total_pages=total_pages)
+    except Exception as e:
+        flash(f'Error loading table data: {e}', 'error')
+        return redirect(url_for('admin_database'))
+
+@app.route('/admin/database/query', methods=['POST'])
+@admin_required
+def admin_database_query():
+    """Execute a read-only SQL query"""
+    db = get_db()
+    query = request.form.get('query', '').strip()
+    
+    if not query:
+        flash('Please enter a SQL query.', 'error')
+        return redirect(url_for('admin_database'))
+    
+    try:
+        result = db.execute_readonly_query(query)
+        table_info = db.get_table_info()
+        return render_template('admin/database.html',
+                             table_info=table_info,
+                             selected_table=None,
+                             query_result=result,
+                             query_text=query)
+    except ValueError as e:
+        flash(str(e), 'error')
+        return redirect(url_for('admin_database'))
+    except Exception as e:
+        flash(f'Query error: {e}', 'error')
+        return redirect(url_for('admin_database'))
 
 # ==================== ADMIN - TRANSLATIONS ====================
 
@@ -1035,13 +1234,13 @@ def admin_articles_add():
             'published': request.form.get('published') == 'on'
         }
         
-        articles.append(new_entry)
-        data['articles'] = articles
-        
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        db = get_db()
+        try:
+            db.add_article(new_entry)
             flash('Article added successfully!', 'success')
             return redirect(url_for('admin_articles'))
-        else:
+        except Exception as e:
+            print(f"Error adding article: {e}")
             flash('Error adding article.', 'error')
     
     return render_template('admin/articles_form.html')
@@ -1082,10 +1281,13 @@ def admin_articles_edit(item_id):
         entry['read_time'] = request.form.get('read_time', '')
         entry['published'] = request.form.get('published') == 'on'
         
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        db = get_db()
+        try:
+            db.update_article(item_id, entry)
             flash('Article updated successfully!', 'success')
             return redirect(url_for('admin_articles'))
-        else:
+        except Exception as e:
+            print(f"Error updating article: {e}")
             flash('Error updating article.', 'error')
     
     return render_template('admin/articles_form.html', entry=entry)
@@ -1094,14 +1296,12 @@ def admin_articles_edit(item_id):
 @admin_required
 def admin_articles_delete(item_id):
     """Delete article"""
-    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-    articles = data.get('articles', [])
-    articles = [item for item in articles if item.get('id') != item_id]
-    data['articles'] = articles
-    
-    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+    db = get_db()
+    try:
+        db.delete_article(item_id)
         flash('Article deleted successfully!', 'success')
-    else:
+    except Exception as e:
+        print(f"Error deleting article: {e}")
         flash('Error deleting article.', 'error')
     
     return redirect(url_for('admin_articles'))
@@ -1139,13 +1339,13 @@ def admin_testimonials_add():
             'featured': request.form.get('featured') == 'on'
         }
         
-        testimonials.append(new_entry)
-        data['testimonials'] = testimonials
-        
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        db = get_db()
+        try:
+            db.add_testimonial(new_entry)
             flash('Testimonial added successfully!', 'success')
             return redirect(url_for('admin_testimonials'))
-        else:
+        except Exception as e:
+            print(f"Error adding testimonial: {e}")
             flash('Error adding testimonial.', 'error')
     
     return render_template('admin/testimonials_form.html')
@@ -1172,10 +1372,13 @@ def admin_testimonials_edit(item_id):
         entry['date'] = request.form.get('date', '')
         entry['featured'] = request.form.get('featured') == 'on'
         
-        if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+        db = get_db()
+        try:
+            db.update_testimonial(item_id, entry)
             flash('Testimonial updated successfully!', 'success')
             return redirect(url_for('admin_testimonials'))
-        else:
+        except Exception as e:
+            print(f"Error updating testimonial: {e}")
             flash('Error updating testimonial.', 'error')
     
     return render_template('admin/testimonials_form.html', entry=entry)
@@ -1184,17 +1387,95 @@ def admin_testimonials_edit(item_id):
 @admin_required
 def admin_testimonials_delete(item_id):
     """Delete testimonial"""
-    data = load_portfolio_data(PORTFOLIO_DATA_PATH)
-    testimonials = data.get('testimonials', [])
-    testimonials = [item for item in testimonials if item.get('id') != item_id]
-    data['testimonials'] = testimonials
-    
-    if save_portfolio_data(PORTFOLIO_DATA_PATH, data):
+    db = get_db()
+    try:
+        db.delete_testimonial(item_id)
         flash('Testimonial deleted successfully!', 'success')
-    else:
+    except Exception as e:
+        print(f"Error deleting testimonial: {e}")
         flash('Error deleting testimonial.', 'error')
     
     return redirect(url_for('admin_testimonials'))
+
+# ==================== ADMIN - CREDENTIALS MANAGEMENT ====================
+
+@app.route('/admin/credentials', methods=['GET', 'POST'])
+@admin_required
+def admin_credentials():
+    """Manage admin credentials"""
+    db = get_db()
+    current_username = session.get('admin_username')
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'change_password':
+            current_password = request.form.get('current_password', '')
+            new_password = request.form.get('new_password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            
+            # Verify current password
+            if not db.verify_admin_credentials(current_username, current_password):
+                flash('Current password is incorrect.', 'error')
+                return redirect(url_for('admin_credentials'))
+            
+            # Validate new password
+            if not new_password or len(new_password) < 6:
+                flash('New password must be at least 6 characters long.', 'error')
+                return redirect(url_for('admin_credentials'))
+            
+            if new_password != confirm_password:
+                flash('New passwords do not match.', 'error')
+                return redirect(url_for('admin_credentials'))
+            
+            # Update password
+            if db.update_admin_password(current_username, new_password):
+                flash('Password updated successfully!', 'success')
+            else:
+                flash('Error updating password.', 'error')
+        
+        elif action == 'change_username':
+            new_username = request.form.get('new_username', '').strip()
+            password = request.form.get('password', '')
+            
+            # Verify password
+            if not db.verify_admin_credentials(current_username, password):
+                flash('Password is incorrect.', 'error')
+                return redirect(url_for('admin_credentials'))
+            
+            # Validate new username
+            if not new_username or len(new_username) < 3:
+                flash('Username must be at least 3 characters long.', 'error')
+                return redirect(url_for('admin_credentials'))
+            
+            # Update username
+            if db.update_admin_username(current_username, new_username):
+                session['admin_username'] = new_username
+                flash('Username updated successfully!', 'success')
+            else:
+                flash('Error updating username. Username may already be taken.', 'error')
+        
+        return redirect(url_for('admin_credentials'))
+    
+    # Get admin info
+    admin_info = None
+    if current_username:
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT username, created_at, last_login 
+                FROM admin_users 
+                WHERE username = ?
+            ''', (current_username,))
+            row = cursor.fetchone()
+            if row:
+                admin_info = {
+                    'username': row['username'],
+                    'created_at': row['created_at'],
+                    'last_login': row['last_login']
+                }
+    
+    return render_template('admin/credentials.html', admin_info=admin_info)
 
 # ==================== ERROR HANDLERS ====================
 

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ current_language }}" dir="{% if current_language == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Portfolio{% endblock %}</title>
     
@@ -36,26 +35,33 @@
                 <li><a href="{{ url_for('index') }}" class="nav-link">{{ t('nav.home') }}</a></li>
                 <li><a href="{{ url_for('projects') }}" class="nav-link">{{ t('nav.projects') }}</a></li>
                 <li><a href="{{ url_for('skills') }}" class="nav-link">{{ t('nav.skills') }}</a></li>
+                <li><a href="{{ url_for('experience') }}" class="nav-link">Experience</a></li>
                 <li><a href="{{ url_for('education') }}" class="nav-link">{{ t('nav.education') }}</a></li>
                 <li><a href="{{ url_for('certifications') }}" class="nav-link">{{ t('nav.certifications') }}</a></li>
                 <li><a href="{{ url_for('blog') }}" class="nav-link">Blog</a></li>
                 <li><a href="{{ url_for('contact') }}" class="nav-link">{{ t('nav.contact') }}</a></li>
             </ul>
-            <div class="language-switcher">
-                <button class="lang-btn" id="langToggle" aria-label="Language">
-                    <i class="fas fa-globe"></i>
-                    <span class="lang-code">{{ current_language|upper }}</span>
+            <div class="nav-controls">
+                <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme" title="Toggle Theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                    <span class="theme-label" id="themeLabel">Dark</span>
                 </button>
-                <div class="lang-dropdown" id="langDropdown">
-                    {% for code, name in supported_languages.items() %}
-                    <a href="{{ url_for('set_language_route', language=code) }}" 
-                       class="lang-option {% if code == current_language %}active{% endif %}">
-                        <span class="lang-name">{{ name }}</span>
-                        {% if code == current_language %}
-                        <i class="fas fa-check"></i>
-                        {% endif %}
-                    </a>
-                    {% endfor %}
+                <div class="language-switcher">
+                    <button class="lang-btn" id="langToggle" aria-label="Language">
+                        <i class="fas fa-globe"></i>
+                        <span class="lang-code">{{ current_language|upper }}</span>
+                    </button>
+                    <div class="lang-dropdown" id="langDropdown">
+                        {% for code, name in supported_languages.items() %}
+                        <a href="{{ url_for('set_language_route', language=code) }}" 
+                           class="lang-option {% if code == current_language %}active{% endif %}">
+                            <span class="lang-name">{{ name }}</span>
+                            {% if code == current_language %}
+                            <i class="fas fa-check"></i>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             <div class="nav-toggle">
@@ -92,17 +98,17 @@
                     <div class="footer-section">
                         <h3>Connect</h3>
                         <div class="social-links">
-                            {% if data and data.personal_info.social_links.github %}
+                            {% if data and data.personal_info and data.personal_info.get('social_links') and data.personal_info.social_links.get('github') %}
                             <a href="{{ data.personal_info.social_links.github }}" target="_blank" class="social-link">
                                 <i class="fab fa-github"></i>
                             </a>
                             {% endif %}
-                            {% if data and data.personal_info.social_links.linkedin %}
+                            {% if data and data.personal_info and data.personal_info.get('social_links') and data.personal_info.social_links.get('linkedin') %}
                             <a href="{{ data.personal_info.social_links.linkedin }}" target="_blank" class="social-link">
                                 <i class="fab fa-linkedin"></i>
                             </a>
                             {% endif %}
-                            {% if data and data.personal_info.social_links.twitter %}
+                            {% if data and data.personal_info and data.personal_info.get('social_links') and data.personal_info.social_links.get('twitter') %}
                             <a href="{{ data.personal_info.social_links.twitter }}" target="_blank" class="social-link">
                                 <i class="fab fa-twitter"></i>
                             </a>
@@ -181,6 +187,7 @@
     </div>
 
     <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/chat-assistant.js') }}"></script>
     {% block scripts %}{% endblock %}
