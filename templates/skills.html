@@ -232,15 +232,20 @@
     
     // Animate skill cards on scroll
     gsap.utils.toArray('.skill-card-modern').forEach((card, index) => {
-        gsap.from(card, {
+        // Set initial state
+        gsap.set(card, { opacity: 0, y: 30 });
+        
+        // Animate on scroll
+        gsap.to(card, {
             scrollTrigger: {
                 trigger: card,
                 start: 'top 85%',
-                toggleActions: 'play none none none'
+                toggleActions: 'play none none none',
+                once: true
             },
             duration: 0.6,
-            y: 30,
-            opacity: 0,
+            y: 0,
+            opacity: 1,
             delay: (index % 6) * 0.1,
             ease: 'power2.out'
         });
@@ -248,15 +253,20 @@
     
     // Animate category headers
     gsap.utils.toArray('.category-header-modern').forEach((header, index) => {
-        gsap.from(header, {
+        // Set initial state
+        gsap.set(header, { opacity: 0, x: -50 });
+        
+        // Animate on scroll
+        gsap.to(header, {
             scrollTrigger: {
                 trigger: header,
                 start: 'top 85%',
-                toggleActions: 'play none none none'
+                toggleActions: 'play none none none',
+                once: true
             },
             duration: 0.8,
-            x: -50,
-            opacity: 0,
+            x: 0,
+            opacity: 1,
             delay: index * 0.15,
             ease: 'power2.out'
         });

@@ -232,28 +232,45 @@ if (contactForm) {
 }
 
 // ==================== INTERSECTION OBSERVER FOR ANIMATIONS ====================
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver(function(entries) {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-
-// Observe elements for fade-in animation
+// Only use Intersection Observer for elements that don't have GSAP animations
+// GSAP ScrollTrigger handles most animations, so this is a fallback
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if GSAP is available - if so, let GSAP handle animations
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        // GSAP will handle animations, so we skip Intersection Observer
+        return;
+    }
+    
+    // Fallback: Use Intersection Observer only if GSAP is not available
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Only animate if element hasn't been animated by GSAP
+                if (!entry.target.dataset.animated) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                    entry.target.dataset.animated = 'true';
+                    observer.unobserve(entry.target);
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements for fade-in animation (only if GSAP not available)
     const animatedElements = document.querySelectorAll('.skill-card, .project-card-3d, .timeline-item, .cert-card');
     animatedElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(el);
+        // Only set initial state if not already animated
+        if (!el.dataset.animated) {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        }
     });
 });
 

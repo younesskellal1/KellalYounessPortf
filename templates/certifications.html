@@ -97,15 +97,20 @@
     
     // Animate certification cards
     gsap.utils.toArray('.cert-card').forEach((element, index) => {
-        gsap.from(element, {
+        // Set initial state
+        gsap.set(element, { opacity: 0, y: 50 });
+        
+        // Animate on scroll
+        gsap.to(element, {
             scrollTrigger: {
                 trigger: element,
                 start: 'top 80%',
-                toggleActions: 'play none none none'
+                toggleActions: 'play none none none',
+                once: true
             },
             duration: 0.8,
-            y: 50,
-            opacity: 0,
+            y: 0,
+            opacity: 1,
             delay: index * 0.1,
             ease: 'power2.out'
         });

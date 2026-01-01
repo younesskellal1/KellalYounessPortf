@@ -551,7 +551,6 @@ a:hover {
 @media (max-width: 600px) {
     .assistant-container { width: 220px; height: 260px; }
 }
-}
 
 .btn-glow::before {
     content: '';
@@ -2549,6 +2548,15 @@ section {
     right: 20px;
     z-index: 1000;
     font-family: 'Rajdhani', sans-serif;
+    /* Ensure it's above other content */
+    isolation: isolate;
+}
+
+/* Prevent chat from being hidden on mobile */
+@media (max-width: 768px) {
+    .chat-widget {
+        z-index: 10000; /* Higher z-index on mobile */
+    }
 }
 
 .chat-button {
@@ -2569,6 +2577,9 @@ section {
     justify-content: center;
     position: relative;
     animation: pulseButton 2s ease-in-out infinite;
+    /* Better touch target on mobile */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 @keyframes pulseButton {
@@ -2637,12 +2648,20 @@ section {
     pointer-events: none;
     transition: all var(--transition-normal);
     overflow: hidden;
+    transform-origin: bottom right;
 }
 
 .chat-box-open {
     opacity: 1;
     transform: translateY(0) scale(1);
     pointer-events: all;
+}
+
+/* Mobile-specific open state */
+@media (max-width: 768px) {
+    .chat-box-open {
+        transform: translateY(0) scale(1);
+    }
 }
 
 .chat-box-minimized {
@@ -2709,6 +2728,9 @@ section {
     align-items: center;
     justify-content: center;
     transition: var(--transition-normal);
+    /* Better touch target on mobile */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .chat-icon-btn:hover {
@@ -2871,6 +2893,9 @@ section {
     justify-content: center;
     transition: var(--transition-normal);
     box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+    /* Better touch target on mobile */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .chat-send-btn:hover {
@@ -2884,23 +2909,174 @@ section {
 
 /* ==================== RESPONSIVE ENHANCEMENTS FOR NEW PAGES ==================== */
 @media (max-width: 768px) {
+    .chat-widget {
+        bottom: max(15px, env(safe-area-inset-bottom));
+        right: max(15px, env(safe-area-inset-right));
+        left: auto;
+        width: auto;
+    }
+    
     .chat-box {
-        width: calc(100vw - 40px);
-        max-width: 380px;
-        bottom: 80px;
-        right: 20px;
-        left: 20px;
-        max-height: calc(100vh - 120px);
+        position: fixed;
+        width: calc(100vw - 30px);
+        max-width: none;
+        bottom: calc(80px + env(safe-area-inset-bottom));
+        right: max(15px, env(safe-area-inset-right));
+        left: max(15px, env(safe-area-inset-left));
+        max-height: calc(100vh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        height: auto;
+        transform-origin: bottom right;
     }
     
     .chat-messages {
-        max-height: calc(100vh - 300px);
+        max-height: calc(100vh - 280px);
+        min-height: 150px;
+        padding: var(--spacing-md);
     }
     
     .chat-button {
         width: 56px;
         height: 56px;
         font-size: 1.25rem;
+        position: relative;
+    }
+    
+    .chat-header {
+        padding: var(--spacing-md);
+        flex-wrap: wrap;
+    }
+    
+    .chat-header-text h3 {
+        font-size: 0.95rem;
+    }
+    
+    .chat-header-text p {
+        font-size: 0.7rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .chat-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+    
+    .chat-icon-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+    
+    .chat-bubble {
+        max-width: 85%;
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .chat-bubble p {
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    
+    .chat-input-container {
+        padding: var(--spacing-md);
+    }
+    
+    .chat-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .chat-send-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .chat-widget {
+        bottom: max(10px, env(safe-area-inset-bottom));
+        right: max(10px, env(safe-area-inset-right));
+        width: auto;
+    }
+    
+    .chat-box {
+        position: fixed;
+        width: calc(100vw - 20px);
+        bottom: calc(70px + env(safe-area-inset-bottom));
+        right: max(10px, env(safe-area-inset-right));
+        left: max(10px, env(safe-area-inset-left));
+        max-height: calc(100vh - 90px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        border-radius: var(--radius-md);
+        transform-origin: bottom right;
+    }
+    
+    .chat-button {
+        width: 52px;
+        height: 52px;
+        font-size: 1.15rem;
+        position: relative;
+    }
+    
+    .chat-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .chat-header-text {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .chat-header-text h3 {
+        font-size: 0.9rem;
+    }
+    
+    .chat-header-text p {
+        font-size: 0.65rem;
+    }
+    
+    .chat-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .chat-messages {
+        max-height: calc(100vh - 260px);
+        min-height: 120px;
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .chat-bubble {
+        max-width: 90%;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .chat-bubble p {
+        font-size: 0.8rem;
+    }
+    
+    .chat-input-container {
+        padding: var(--spacing-sm) var(--spacing-md);
+        gap: var(--spacing-xs);
+    }
+    
+    .chat-input {
+        font-size: 16px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .chat-send-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
     }
 }
     .category-title {
@@ -2961,7 +3137,6 @@ section {
     .cert-meta {
         font-size: 0.8rem;
     }
-}
 
 /* ==================== PROJECT DETAIL PAGE ==================== */
 .project-detail-header {
@@ -4119,4 +4294,3 @@ section {
         width: 100%;
     }
 }
-

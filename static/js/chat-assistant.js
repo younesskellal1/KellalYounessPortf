@@ -27,16 +27,66 @@ class ChatAssistant {
         this.chatMinimize = document.getElementById('chatMinimize');
         this.chatTyping = document.getElementById('chatTyping');
         
-        // Event listeners
-        this.chatButton.addEventListener('click', () => this.toggleChat());
-        this.chatClose.addEventListener('click', () => this.closeChat());
-        this.chatMinimize.addEventListener('click', () => this.minimizeChat());
-        this.chatSend.addEventListener('click', () => this.sendMessage());
+        // Event listeners - support both click and touch events for mobile
+        this.chatButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleChat();
+        });
+        this.chatButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleChat();
+        });
+        
+        this.chatClose.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.closeChat();
+        });
+        this.chatClose.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.closeChat();
+        });
+        
+        this.chatMinimize.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.minimizeChat();
+        });
+        this.chatMinimize.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.minimizeChat();
+        });
+        
+        this.chatSend.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.sendMessage();
+        });
+        this.chatSend.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.sendMessage();
+        });
+        
         this.chatInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 this.sendMessage();
             }
         });
+        
+        // Close chat when clicking outside on mobile
+        if (window.innerWidth <= 768) {
+            document.addEventListener('click', (e) => {
+                if (this.isOpen && !this.chatBox.contains(e.target) && !this.chatButton.contains(e.target)) {
+                    this.closeChat();
+                }
+            });
+        }
         
         // Welcome message
         this.addWelcomeMessage();
@@ -77,7 +127,15 @@ class ChatAssistant {
             notification.classList.remove('active');
         }
         
-        this.chatInput.focus();
+        // Prevent body scroll on mobile when chat is open
+        if (window.innerWidth <= 768) {
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Focus input with a small delay to ensure it works on mobile
+        setTimeout(() => {
+            this.chatInput.focus();
+        }, 100);
     }
     
     closeChat() {
@@ -85,6 +143,11 @@ class ChatAssistant {
         this.isMinimized = false;
         this.chatBox.classList.remove('chat-box-open', 'chat-box-minimized');
         this.chatButton.classList.remove('chat-button-active');
+        
+        // Restore body scroll on mobile
+        if (window.innerWidth <= 768) {
+            document.body.style.overflow = '';
+        }
     }
     
     minimizeChat() {
@@ -126,8 +189,13 @@ class ChatAssistant {
         messageDiv.appendChild(bubbleDiv);
         this.chatMessages.appendChild(messageDiv);
         
-        // Scroll to bottom
-        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        // Scroll to bottom with smooth behavior
+        setTimeout(() => {
+            this.chatMessages.scrollTo({
+                top: this.chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 50);
         
         // Save to history
         this.chatHistory.push({ text, sender, timestamp: Date.now() });
@@ -135,7 +203,12 @@ class ChatAssistant {
     
     showTyping() {
         this.chatTyping.style.display = 'block';
-        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        setTimeout(() => {
+            this.chatMessages.scrollTo({
+                top: this.chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 50);
     }
     
     hideTyping() {

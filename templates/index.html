@@ -648,55 +648,78 @@
     })();
     
     // Initialize GSAP ScrollTrigger
-    gsap.registerPlugin(ScrollTrigger);
-    
-    // Hero animation
-    gsap.from('.hero-title', {
-        duration: 1,
-        y: 50,
-        opacity: 0,
-        ease: 'power3.out'
-    });
-    
-    gsap.from('.hero-subtitle', {
-        duration: 1,
-        y: 30,
-        opacity: 0,
-        delay: 0.2,
-        ease: 'power3.out'
-    });
-    
-    gsap.from('.hero-description', {
-        duration: 1,
-        y: 30,
-        opacity: 0,
-        delay: 0.4,
-        ease: 'power3.out'
-    });
-    
-    gsap.from('.hero-buttons', {
-        duration: 1,
-        y: 30,
-        opacity: 0,
-        delay: 0.6,
-        ease: 'power3.out'
-    });
-    
-    // Scroll-triggered animations
-    gsap.utils.toArray('.skill-card, .project-card-3d, .timeline-item').forEach((element, index) => {
-        gsap.from(element, {
-            scrollTrigger: {
-                trigger: element,
-                start: 'top 80%',
-                toggleActions: 'play none none none'
-            },
-            duration: 0.8,
-            y: 50,
-            opacity: 0,
-            delay: index * 0.1,
-            ease: 'power2.out'
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // Hero animation - set initial state first
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle) {
+            gsap.set(heroTitle, { opacity: 0, y: 50 });
+            gsap.to(heroTitle, {
+                duration: 1,
+                y: 0,
+                opacity: 1,
+                ease: 'power3.out'
+            });
+        }
+        
+        const heroSubtitle = document.querySelector('.hero-subtitle');
+        if (heroSubtitle) {
+            gsap.set(heroSubtitle, { opacity: 0, y: 30 });
+            gsap.to(heroSubtitle, {
+                duration: 1,
+                y: 0,
+                opacity: 1,
+                delay: 0.2,
+                ease: 'power3.out'
+            });
+        }
+        
+        const heroDescription = document.querySelector('.hero-description');
+        if (heroDescription) {
+            gsap.set(heroDescription, { opacity: 0, y: 30 });
+            gsap.to(heroDescription, {
+                duration: 1,
+                y: 0,
+                opacity: 1,
+                delay: 0.4,
+                ease: 'power3.out'
+            });
+        }
+        
+        const heroButtons = document.querySelector('.hero-buttons');
+        if (heroButtons) {
+            gsap.set(heroButtons, { opacity: 0, y: 30 });
+            gsap.to(heroButtons, {
+                duration: 1,
+                y: 0,
+                opacity: 1,
+                delay: 0.6,
+                ease: 'power3.out'
+            });
+        }
+        
+        // Scroll-triggered animations - use 'to' instead of 'from' to avoid conflicts
+        gsap.utils.toArray('.skill-card, .project-card-3d, .timeline-item').forEach((element, index) => {
+            // Set initial state
+            gsap.set(element, { opacity: 0, y: 50 });
+            
+            // Animate on scroll
+            gsap.to(element, {
+                scrollTrigger: {
+                    trigger: element,
+                    start: 'top 80%',
+                    toggleActions: 'play none none none',
+                    once: true
+                },
+                duration: 0.8,
+                y: 0,
+                opacity: 1,
+                delay: index * 0.1,
+                ease: 'power2.out'
+            });
         });
-    });
+    }
 </script>
 {% endblock %}
 
